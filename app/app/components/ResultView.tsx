@@ -86,6 +86,42 @@ export function ResultView({
       )}
 
       <div className="flex flex-col items-center gap-4">
+        <div className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center">
+          <p className="text-xs leading-relaxed text-neutral-600">
+            「元画像」「フィードバック」「プロンプト」をコピーし、NanoBanana などの画像生成AIへ入力すると、より高品質な画像を作成できます。
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-neutral-600">
+            日本語テキストがうまく生成できない場合はブラウザ版のGemini（NanoBanana）等で再度試してください。
+          </p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-xs">
+            <a
+              href="https://gemini.google/jp/overview/image-generation/?hl=ja-JP"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
+            >
+              NanoBanana
+            </a>
+            <span className="text-neutral-300">/</span>
+            <a
+              href="https://openai.com/index/dall-e-3/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
+            >
+              DALL·E 3
+            </a>
+            <span className="text-neutral-300">/</span>
+            <a
+              href="https://www.midjourney.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
+            >
+              Midjourney
+            </a>
+          </div>
+        </div>
         <button
           type="button"
           onClick={handleCopy}
@@ -136,7 +172,7 @@ export function ResultView({
         </div>
       ) : generatedUrl ? (
         <div className="space-y-2">
-          <p className="text-xs text-neutral-500">参考イメージ（Replicate生成）</p>
+          <p className="text-xs text-neutral-500">参考イメージ（FLUX.2 pro生成）</p>
           <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
             <div className="flex min-h-[320px] items-center justify-center p-4">
               <img

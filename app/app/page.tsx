@@ -309,43 +309,48 @@ export default function HomePage() {
             className={`mx-auto max-w-lg p-6 ${originalUrl ? "space-y-6" : "flex min-h-[calc(100vh-53px)] flex-col items-center justify-center gap-6"}`}
           >
             {!originalUrl && (
-              <h2 className="text-center text-lg font-semibold text-neutral-800">
-                デザインにフィードバックします。
-              </h2>
+              <>
+                <h2 className="text-center text-lg font-semibold text-neutral-800">
+                  デザインにフィードバックします。
+                </h2>
+                <div className="w-full max-w-md rounded-xl border border-neutral-200 bg-white px-4 py-3">
+                  <p className="text-xs leading-relaxed text-neutral-600">
+                    「元画像」「フィードバック」「プロンプト」をコピーし、NanoBanana などの画像生成AIへ入力すると、より高品質な画像を作成できます。
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-600">
+                    日本語テキストがうまく生成できない場合はブラウザ版のGemini（NanoBanana）等で再度試してください。
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <a
+                      href="https://gemini.google/jp/overview/image-generation/?hl=ja-JP"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
+                    >
+                      NanoBanana
+                    </a>
+                    <span className="text-neutral-300">/</span>
+                    <a
+                      href="https://openai.com/index/dall-e-3/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
+                    >
+                      DALL·E 3
+                    </a>
+                    <span className="text-neutral-300">/</span>
+                    <a
+                      href="https://www.midjourney.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
+                    >
+                      Midjourney
+                    </a>
+                  </div>
+                </div>
+              </>
             )}
-            <div className={`rounded-xl border border-neutral-200 bg-white px-4 py-3 ${originalUrl ? "w-full" : "w-full max-w-md"}`}>
-              <p className="text-xs leading-relaxed text-neutral-600">
-                「元画像」「フィードバック」「プロンプト」をコピーし、NanoBanana などの画像生成AIへ入力すると、より高品質な画像を作成できます。
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <a
-                  href="https://gemini.google/jp/overview/image-generation/?hl=ja-JP"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
-                >
-                  NanoBanana
-                </a>
-                <span className="text-neutral-300">/</span>
-                <a
-                  href="https://openai.com/index/dall-e-3/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
-                >
-                  DALL·E 3
-                </a>
-                <span className="text-neutral-300">/</span>
-                <a
-                  href="https://www.midjourney.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 hover:decoration-neutral-500"
-                >
-                  Midjourney
-                </a>
-              </div>
-            </div>
             {originalUrl && (
               <ResultView
                 originalUrl={originalUrl}
