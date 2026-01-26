@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabase } from "@/lib/supabase/env";
 import { Loader2 } from "lucide-react";
@@ -38,10 +39,17 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
-        <h1 className="mb-8 text-center text-xl text-neutral-900">
-          <span className="font-bold">Re:</span>
-          <span className="font-light">Design</span>
-        </h1>
+        <div className="mb-8 flex justify-center">
+          <Image
+            src="/Re-Design-logo.svg"
+            alt="Re:Design"
+            width={200}
+            height={48}
+            priority
+            unoptimized
+            className="h-12 w-auto"
+          />
+        </div>
         <form
           onSubmit={onSubmit}
           className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6"
