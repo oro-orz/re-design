@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import { join } from "path";
-import { analyze } from "@/actions/analyze";
-import { generateImage } from "@/actions/generate";
 
 /**
  * 画像生成フロー確認用のテストAPI。
- * GET /api/test-generate で public/test.png を使って upload → analyze → generate を実行する。
+ * GET /api/test-generate で public/test.png を使って analyze → generate を実行する。
+ * ビルド時に OpenAI/Replicate を読まないよう動的 import を使用。
  */
 export async function GET() {
   try {
@@ -19,6 +18,9 @@ export async function GET() {
     const mode = "polish" as const;
     const aspectRatio = "1:1";
     const intensity = 2;
+
+    const { analyze } = await import("@/actions/analyze");
+    const { generateImage } = await import("@/actions/generate");
 
     const analyzeRes = await analyze({
       imageUrl,
