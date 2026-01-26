@@ -1,16 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabase } from "@/lib/supabase/env";
 import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // SSOエラーの処理
+  useEffect(() => {
+    const ssoError = searchParams.get('error');
+    if (ssoError) {
+      const errorMessages: Record<string, string> = {
+        missing_params: '必要なパラメータが不足しています。',
+        invalid_token: '認証トークンが無効です。もう一度お試しください。',
+        user_not_found: 'ユーザーが見つかりませんでした。',
+      };
+      setError(errorMessages[ssoError] || 'ログインに失敗しました。');
+    }
+  }, [searchParams]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
