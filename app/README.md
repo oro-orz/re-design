@@ -2,7 +2,8 @@
 
 デザインフィードバック & リファレンス生成ツール。
 
-**本番:** [https://tmg-re-design.vercel.app/](https://tmg-re-design.vercel.app/)
+**本番:** [https://tmg-re-design.vercel.app/](https://tmg-re-design.vercel.app/)  
+本番で「アップロード失敗: Bucket not found」→ [docs/STORAGE.md](../docs/STORAGE.md) の手順で `images` バケット作成。
 
 ## 開発
 

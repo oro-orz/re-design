@@ -1,7 +1,11 @@
--- images バケット作成（本番で Bucket not found になる場合は SQL Editor で実行）
-insert into storage.buckets (id, name, public)
-values ('images', 'images', true)
-on conflict (id) do update set public = true;
+-- images バケット作成（本番で Bucket not found のとき SQL Editor で実行）
+do $$
+begin
+  insert into storage.buckets (id, name, public)
+  values ('images', 'images', true);
+exception when unique_violation then
+  update storage.buckets set public = true where id = 'images';
+end $$;
 
 -- 既存ポリシーがあれば削除（再実行時用）
 drop policy if exists "Users can upload originals" on storage.objects;
