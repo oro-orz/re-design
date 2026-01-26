@@ -43,11 +43,11 @@ export default function LoginPage() {
           <Image
             src="/Re-Design-logo.svg"
             alt="Re:Design"
-            width={200}
-            height={48}
+            width={280}
+            height={80}
             priority
             unoptimized
-            className="h-12 w-auto"
+            className="h-20 w-auto"
           />
         </div>
         <form
