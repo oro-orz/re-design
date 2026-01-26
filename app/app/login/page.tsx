@@ -38,8 +38,9 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
-        <h1 className="mb-8 text-center text-xl font-semibold text-neutral-900">
-          Re:Design
+        <h1 className="mb-8 text-center text-xl text-neutral-900">
+          <span className="font-bold">Re:</span>
+          <span className="font-light">Design</span>
         </h1>
         <form
           onSubmit={onSubmit}

@@ -140,7 +140,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800 bg-neutral-900 px-4 py-3">
-        <h1 className="text-lg font-semibold text-white">Re:Design</h1>
+        <h1 className="text-lg text-white">
+          <span className="font-bold">Re:</span>
+          <span className="font-light">Design</span>
+        </h1>
         {hasSupabase() && (
           <form action={logout} className="contents">
             <button
