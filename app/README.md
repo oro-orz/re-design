@@ -32,6 +32,35 @@ npm run dev
 - **OpenAI**: 有料（GPT-4o Vision は従量課金）。[APIキー](https://platform.openai.com/api-keys)を取得。
 - 未設定の間はログイン不要でトップは表示されるが、アップロード・分析・生成は利用不可。
 
+### SSO（TMG Portal 子サイト）用の環境変数
+
+TMG Portal のログインを引き継ぐ場合は、上記に加えて以下を Vercel / `.env.local` に設定する。
+
+| 変数 | 用途 |
+|------|------|
+| `NEXT_PUBLIC_FIREBASE_*` | Firebase 設定（ポータルと同じプロジェクト `tmg-portal-45216`） |
+| `NEXT_PUBLIC_TMG_PORTAL_URL` | ポータル URL（未認証時にリダイレクト） |
+| `GOOGLE_CLOUD_PROJECT` | BigQuery プロジェクト ID（社員マスタ照合） |
+| `GOOGLE_APPLICATION_CREDENTIALS_JSON` | GCP サービスアカウント JSON |
+
+**Firebase Console の事前設定（必須）**
+
+1. プロジェクト `tmg-portal-45216` を選択
+2. **Authentication** > **設定** > **認証ドメイン**
+3. **ドメインを追加** で re-design の本番ドメインを追加（例: `tmg-re-design.vercel.app`）
+
+この設定がないと本番で `signInWithCustomToken` がブロックされる。
+
+### SSO 動作確認チェックリスト（手順書準拠）
+
+- [ ] 子サイトに直接アクセス → ポータルのログイン画面にリダイレクトされる
+- [ ] ポータルでログイン → 子サイトのダッシュボードが表示される
+- [ ] ポータルからのリンク → 子サイトのダッシュボードが表示される
+- [ ] ログアウト → 再アクセス時はポータルへリダイレクトされる
+- [ ] 権限のないユーザー → 「アクセス権限がありません」が表示される
+- [ ] 社員マスタに未登録のメール → 「社員マスタに登録されていないアカウントです」が表示される
+- [ ] デバッグ: `NEXT_PUBLIC_DEBUG_SSO=1` でブラウザ Console に `[SSO]` ログが出る
+
 ---
 
 ## 次の一手：Supabase・Git・Vercel 連携

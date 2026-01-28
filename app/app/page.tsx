@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Sparkles, LogOut } from "lucide-react";
 import { hasSupabase } from "@/lib/supabase/env";
 import { logout } from "@/actions/logout";
+import { useAuth } from "@/contexts/AuthContext";
 import { Logo } from "./components/Logo";
 import { UploadZone } from "./components/UploadZone";
 import { ModeSelect } from "./components/ModeSelect";
@@ -22,7 +24,18 @@ import {
   type AspectRatioId,
 } from "@/lib/constants";
 
+const REDIRECT_STABILIZE_MS = 300;
+
 export default function HomePage() {
+  const router = useRouter();
+  const {
+    user,
+    loading: authLoading,
+    error: authError,
+    hadTokenThisSession,
+    logout: authLogout,
+  } = useAuth();
+
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [mode, setMode] = useState<ModeId | null>(null);
@@ -138,20 +151,93 @@ export default function HomePage() {
     setGenerateLoading(false);
   }, []);
 
+  // 未認証時は TMG Portal へリダイレクト（SSO）
+  useEffect(() => {
+    if (authLoading || user || authError) return;
+    if (hadTokenThisSession && !user) return;
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("token")) return;
+
+    const redirectToPortal = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("token");
+      const redirectUri = encodeURIComponent(url.toString());
+      const portalUrl = process.env.NEXT_PUBLIC_TMG_PORTAL_URL;
+      if (portalUrl) {
+        window.location.href = `${portalUrl}/login?redirect_uri=${redirectUri}`;
+      } else {
+        router.push("/login");
+      }
+    };
+
+    const t = setTimeout(() => {
+      const again = new URLSearchParams(window.location.search);
+      if (again.has("token")) return;
+      redirectToPortal();
+    }, REDIRECT_STABILIZE_MS);
+    return () => clearTimeout(t);
+  }, [user, authLoading, authError, hadTokenThisSession, router]);
+
+  // 認証ローディング中
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <p className="text-neutral-600">読み込み中...</p>
+      </div>
+    );
+  }
+
+  // 未認証（リダイレクト待ち or エラー表示）
+  if (!user) {
+    const portalUrl = process.env.NEXT_PUBLIC_TMG_PORTAL_URL;
+    const hasTokenInUrl =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).has("token");
+    const redirectLabel = hasTokenInUrl
+      ? "認証処理中..."
+      : portalUrl
+        ? "ポータルへ移動中..."
+        : "ログインページへ移動中...";
+
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-neutral-50 p-4">
+        <p className="text-neutral-700">{redirectLabel}</p>
+        {authError && (
+          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {authError}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800 bg-neutral-900 px-4 py-3">
         <Logo as="h1" className="text-lg text-white" />
-        {hasSupabase() && (
-          <form action={logout} className="contents">
-            <button
-              type="submit"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
-            >
-              <LogOut className="h-4 w-4" />
-              ログアウト
-            </button>
-          </form>
+        {user ? (
+          <button
+            type="button"
+            onClick={() => authLogout()}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+            ログアウト
+          </button>
+        ) : (
+          hasSupabase() && (
+            <form action={logout} className="contents">
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+              >
+                <LogOut className="h-4 w-4" />
+                ログアウト
+              </button>
+            </form>
+          )
         )}
       </header>
 

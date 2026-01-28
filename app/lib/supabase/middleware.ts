@@ -2,6 +2,14 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
+  // Firebase SSO 使用時は Supabase のリダイレクトを行わない（保護は page 側の Firebase で行う）
+  const useFirebaseSSO =
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
+    process.env.NEXT_PUBLIC_TMG_PORTAL_URL;
+  if (useFirebaseSSO) {
+    return NextResponse.next({ request });
+  }
+
   // 開発モード: 認証チェックをスキップ
   const DEV_MODE = process.env.NODE_ENV === "development";
   if (DEV_MODE) {
