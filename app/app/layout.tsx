@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notoSans } from "@/lib/fonts";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${notoSans.className} antialiased bg-white text-neutral-900`}>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

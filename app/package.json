@@ -11,8 +11,11 @@
     "seed:csv": "node scripts/seed-from-csv.mjs"
   },
   "dependencies": {
+    "@google-cloud/bigquery": "^8.1.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.78.0",
+    "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.0",
     "lucide-react": "^0.563.0",
     "next": "14.2.18",
     "openai": "^6.16.0",
