@@ -217,28 +217,48 @@ export default function HomePage() {
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800 bg-neutral-900 px-4 py-3">
         <Logo as="h1" className="text-lg text-white" />
-        {user ? (
-          <button
-            type="button"
-            onClick={() => authLogout()}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
-          >
-            <LogOut className="h-4 w-4" />
-            ログアウト
-          </button>
-        ) : (
-          hasSupabase() && (
-            <form action={logout} className="contents">
-              <button
-                type="submit"
-                className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
-              >
-                <LogOut className="h-4 w-4" />
-                ログアウト
-              </button>
-            </form>
-          )
-        )}
+        <div className="flex items-center gap-4">
+          <nav className="flex items-center gap-4" aria-label="他サービス">
+            <a
+              href="https://cloud-pilot.tmgsystem.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-neutral-300 transition-colors hover:text-white"
+            >
+              CloudPilot
+            </a>
+            <a
+              href="https://tmg-re-design.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-neutral-300 transition-colors hover:text-white"
+            >
+              Re: Design
+            </a>
+          </nav>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => authLogout()}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+            >
+              <LogOut className="h-4 w-4" />
+              ログアウト
+            </button>
+          ) : (
+            hasSupabase() && (
+              <form action={logout} className="contents">
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+                >
+                  <LogOut className="h-4 w-4" />
+                  ログアウト
+                </button>
+              </form>
+            )
+          )}
+        </div>
       </header>
 
       <main className="grid min-h-[calc(100vh-53px)] grid-cols-1 lg:grid-cols-2">
