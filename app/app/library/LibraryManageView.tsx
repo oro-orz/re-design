@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus } from "lucide-react";
+import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus, UsersRound } from "lucide-react";
 import {
   listPromptTemplates,
   deletePromptTemplate,
@@ -436,6 +436,13 @@ export function LibraryManageView() {
           >
             <ImagePlus className="w-3 h-3 shrink-0" />
             ベース生成
+          </Link>
+          <Link
+            href="/character-tools"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <UsersRound className="w-3 h-3 shrink-0" />
+            キャラ生成
           </Link>
           <Link
             href="/feedback"

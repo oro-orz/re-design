@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Users, Library, MessageSquare, ExternalLink, Upload, Loader2, Sparkles } from "lucide-react";
+import { Users, Library, MessageSquare, ExternalLink, Upload, Loader2, Sparkles, ImagePlus, UsersRound } from "lucide-react";
 import { uploadAndGenerateBase } from "@/actions/overlay-mode";
 import { listPromptTemplates } from "@/actions/library";
 import { BaseImageResult } from "@/app/components/overlay-mode/BaseImageResult";
@@ -113,12 +113,29 @@ function NewOverlayModeContent() {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!result) return;
-    const link = document.createElement("a");
-    link.href = result.baseImageUrl;
-    link.download = `overlay-base-${Date.now()}.png`;
-    link.click();
+    const url = result.baseImageUrl;
+    try {
+      const res = url.startsWith("data:")
+        ? await fetch(url)
+        : await fetch(`/api/character-tools/download?url=${encodeURIComponent(url)}`);
+      if (!res.ok) throw new Error("ダウンロードに失敗しました");
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `overlay-base-${Date.now()}.png`;
+      link.click();
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error(err);
+      // フォールバック: 直リンク
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `overlay-base-${Date.now()}.png`;
+      link.click();
+    }
   };
 
   const handleReset = () => {
@@ -272,6 +289,20 @@ function NewOverlayModeContent() {
           >
             <Sparkles className="w-3 h-3 shrink-0" />
             プロンプト生成
+          </Link>
+          <Link
+            href="/overlay-mode/new"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-600 transition-colors"
+          >
+            <ImagePlus className="w-3 h-3 shrink-0" />
+            ベース生成
+          </Link>
+          <Link
+            href="/character-tools"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <UsersRound className="w-3 h-3 shrink-0" />
+            キャラ生成
           </Link>
           <Link
             href="/feedback"

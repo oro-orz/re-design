@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Loader2, RefreshCw, RotateCcw, ExternalLink, ImagePlus } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, RotateCcw, ExternalLink, ImagePlus, UsersRound } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UploadZone } from "../components/UploadZone";
 import { ResultView } from "../components/ResultView";
@@ -175,6 +175,13 @@ export default function FeedbackPage() {
           >
             <ImagePlus className="w-3 h-3 shrink-0" />
             ベース生成
+          </Link>
+          <Link
+            href="/character-tools"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <UsersRound className="w-3 h-3 shrink-0" />
+            キャラ生成
           </Link>
           <a
             href="https://gemini.google.com/app"
