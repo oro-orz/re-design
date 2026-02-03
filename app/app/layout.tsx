@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "@/lib/polyfill-file";
 import { notoSans } from "@/lib/fonts";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";

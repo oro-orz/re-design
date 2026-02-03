@@ -2,7 +2,8 @@
 
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Sparkles, LogOut, LayoutTemplate, Library } from "lucide-react";
 import { hasSupabase } from "@/lib/supabase/env";
 import { logout } from "@/actions/logout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -217,6 +218,22 @@ export default function HomePage() {
     <div className="min-h-screen bg-neutral-50">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-neutral-800 bg-neutral-900 px-4 py-3">
         <Logo as="h1" className="text-lg text-white" />
+        <nav className="flex items-center gap-2">
+          <Link
+            href="/swipe-lp/v3/new"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+          >
+            <LayoutTemplate className="h-4 w-4" />
+            スライド生成
+          </Link>
+          <Link
+            href="/library/manage"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-neutral-300 transition-colors hover:bg-neutral-800 hover:text-white"
+          >
+            <Library className="h-4 w-4" />
+            ライブラリ
+          </Link>
+        </nav>
         {user ? (
           <button
             type="button"

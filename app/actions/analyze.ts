@@ -1,6 +1,7 @@
 "use server";
 
 import OpenAI from "openai";
+import { OPENAI_CHAT_MODEL } from "@/lib/openai";
 import { MODES, type ModeId } from "@/lib/constants";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -229,7 +230,7 @@ export async function analyze(params: {
     "Determine Layout Strategy from mode (Step 3), then analyze the image, perform Step 1–4 and Step 4.5 (readability enforcement when needed), and output the JSON.";
 
   const res = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: OPENAI_CHAT_MODEL,
     messages: [
       { role: "system", content: systemPrompt },
       {
