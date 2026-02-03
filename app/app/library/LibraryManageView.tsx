@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus } from "lucide-react";
 import {
   listPromptTemplates,
   deletePromptTemplate,
@@ -15,6 +16,45 @@ import {
 import type { PromptTemplate, TemplateStyle, TemplateSlots } from "@/types/swipe-lp-v3";
 import { ASPECT_RATIOS } from "@/lib/constants";
 import { AspectRatioIcon } from "@/app/components/AspectRatioIcon";
+
+/** ライブラリ用コピーフォーマットをパース */
+function parseLibraryBulkFormat(text: string): {
+  message: string;
+  subMessage: string;
+  additionalText: string;
+} {
+  const MAIN = "【メインコピー】";
+  const SUB = "【サブコピー】";
+  const ADD = "【追加テキスト】";
+
+  const mainIdx = text.indexOf(MAIN);
+  const subIdx = text.indexOf(SUB);
+  const addIdx = text.indexOf(ADD);
+
+  let message = "";
+  let subMessage = "";
+  let additionalText = "";
+
+  if (mainIdx >= 0) {
+    const start = mainIdx + MAIN.length;
+    const end = subIdx >= 0 ? subIdx : addIdx >= 0 ? addIdx : text.length;
+    message = text.slice(start, end).trim();
+  }
+  if (subIdx >= 0) {
+    const start = subIdx + SUB.length;
+    const end = addIdx >= 0 ? addIdx : text.length;
+    subMessage = text.slice(start, end).trim();
+  }
+  if (addIdx >= 0) {
+    additionalText = text.slice(addIdx + ADD.length).trim();
+  }
+
+  if (mainIdx < 0 && subIdx < 0 && addIdx < 0 && text.trim()) {
+    message = text.trim();
+  }
+
+  return { message, subMessage, additionalText };
+}
 
 /** 構造化スタイルを表形式で編集 */
 function StyleJsonEditor({
@@ -137,7 +177,9 @@ export function LibraryManageView() {
   const [generatingPrompt, setGeneratingPrompt] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [showRegenerateConfirm, setShowRegenerateConfirm] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bulkPasteStatus, setBulkPasteStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"created_at" | "name" | "category">("created_at");
@@ -147,6 +189,7 @@ export function LibraryManageView() {
 
   const [editingCategory, setEditingCategory] = useState("");
   const [editingSubcategory, setEditingSubcategory] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -289,6 +332,25 @@ export function LibraryManageView() {
     setRegenerating(false);
   };
 
+  const handleBulkPaste = async () => {
+    setBulkPasteStatus(null);
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text?.trim()) {
+        setBulkPasteStatus("クリップボードが空です。SwipeLPで「ライブラリ用にコピー」してからお試しください。");
+        return;
+      }
+      const { message, subMessage, additionalText } = parseLibraryBulkFormat(text);
+      setPromptGenMessage(message);
+      setPromptGenSubMessage(subMessage);
+      setPromptGenAdditionalText(additionalText);
+      setBulkPasteStatus("一括で入力しました。");
+      setTimeout(() => setBulkPasteStatus(null), 2500);
+    } catch (err) {
+      setBulkPasteStatus("クリップボードの読み取りに失敗しました。ブラウザの権限を確認してください。");
+    }
+  };
+
   const handleGeneratePrompt = async () => {
     if (!selectedTemplate?.id) return;
     if (!overlayMode && !promptGenMessage.trim()) {
@@ -317,18 +379,35 @@ export function LibraryManageView() {
     setGeneratingPrompt(false);
   };
 
-  const handleSaveJson = async () => {
-    if (!selectedTemplate?.id) return;
-    const hasJsonChanges = editingStyle || editingSlots;
-    const hasMetaChanges =
+  /** スタイル・スロット・カテゴリのいずれかが実際に変更されているか */
+  const hasUnsavedChanges = useMemo(() => {
+    if (!selectedTemplate) return false;
+    const styleChanged =
+      editingStyle != null &&
+      JSON.stringify(editingStyle) !== JSON.stringify(selectedTemplate.style_json ?? {});
+    const slotsChanged =
+      editingSlots != null &&
+      JSON.stringify(editingSlots) !== JSON.stringify(selectedTemplate.slots_json ?? {});
+    const metaChanged =
       editingCategory !== (selectedTemplate.category ?? "") ||
       editingSubcategory !== (selectedTemplate.subcategory ?? "");
-    if (!hasJsonChanges && !hasMetaChanges) return;
+    return styleChanged || slotsChanged || metaChanged;
+  }, [
+    selectedTemplate,
+    editingStyle,
+    editingSlots,
+    editingCategory,
+    editingSubcategory,
+  ]);
+
+  const handleSaveJson = async () => {
+    if (!selectedTemplate?.id) return;
+    if (!hasUnsavedChanges) return;
     setSaving(true);
     setError(null);
     const updates: Parameters<typeof updatePromptTemplate>[1] = {};
-    if (editingStyle) updates.style_json = editingStyle;
-    if (editingSlots) updates.slots_json = editingSlots;
+    if (editingStyle != null) updates.style_json = editingStyle;
+    if (editingSlots != null) updates.slots_json = editingSlots;
     updates.category = editingCategory.trim() || null;
     updates.subcategory = editingSubcategory.trim() || null;
     const { template: updated, error: err } = await updatePromptTemplate(selectedTemplate.id, updates);
@@ -351,6 +430,13 @@ export function LibraryManageView() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          <Link
+            href="/overlay-mode/new"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <ImagePlus className="w-3 h-3 shrink-0" />
+            ベース生成
+          </Link>
           <Link
             href="/feedback"
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
@@ -582,7 +668,7 @@ export function LibraryManageView() {
                         {selectedTemplate.name || selectedTemplate.category || "プロンプト"}
                       </h3>
                       <div className="flex items-center gap-1">
-                        {(editingStyle || editingSlots || editingCategory !== (selectedTemplate.category ?? "") || editingSubcategory !== (selectedTemplate.subcategory ?? "")) && (
+                        {hasUnsavedChanges && (
                           <button
                             type="button"
                             onClick={handleSaveJson}
@@ -595,6 +681,21 @@ export function LibraryManageView() {
                               <Save className="w-4 h-4" />
                             )}
                             変更を保存
+                          </button>
+                        )}
+                        {(selectedTemplate.sample_image_url || selectedTemplate.image_urls?.[0]) && (
+                          <button
+                            type="button"
+                            onClick={() => setShowRegenerateConfirm(true)}
+                            disabled={regenerating}
+                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-white rounded-lg border border-transparent hover:border-neutral-200 transition-all shrink-0 disabled:opacity-50"
+                          >
+                            {regenerating ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                            スタイルを再生成
                           </button>
                         )}
                         <button
@@ -723,26 +824,76 @@ export function LibraryManageView() {
                               className="flex items-center justify-center gap-2 px-4 py-3 bg-neutral-900 text-white text-sm font-medium rounded-lg hover:bg-neutral-800 transition-colors w-full"
                             >
                               <Sparkles className="w-4 h-4" />
-                              このデザインで生成
+                              プロンプトを生成
                             </button>
                           )}
                           {(selectedTemplate.sample_image_url || selectedTemplate.image_urls?.[0]) && (
                             <button
                               type="button"
-                              onClick={handleRegenerate}
-                              disabled={regenerating}
-                              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg border border-neutral-200 disabled:opacity-50 transition-colors w-full"
+                              onClick={() => {
+                                const url = selectedTemplate.sample_image_url || selectedTemplate.image_urls?.[0] || "";
+                                if (url) {
+                                  router.push(`/overlay-mode/new?imageUrl=${encodeURIComponent(url)}`);
+                                  setSelectedTemplate(null);
+                                }
+                              }}
+                              className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg border border-neutral-200 transition-colors w-full"
                             >
-                              {regenerating ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <RefreshCw className="w-4 h-4" />
-                              )}
-                              再生成
+                              <ImagePlus className="w-4 h-4" />
+                              オーバーレイを生成
                             </button>
                           )}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>,
+                document.body
+              )}
+
+            {/* スタイル再生成の確認モーダル */}
+            {selectedTemplate &&
+              showRegenerateConfirm &&
+              typeof document !== "undefined" &&
+              createPortal(
+                <div
+                  className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setShowRegenerateConfirm(false)}
+                  aria-modal
+                  role="dialog"
+                >
+                  <div
+                    className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 space-y-4 text-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <p className="text-sm text-neutral-700">
+                      スタイルを再生成しますか？<br />
+                      設定が上書きされます。
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowRegenerateConfirm(false)}
+                        className="px-4 py-2.5 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setShowRegenerateConfirm(false);
+                          await handleRegenerate();
+                        }}
+                        disabled={regenerating}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-neutral-900 rounded-lg hover:bg-neutral-800 disabled:opacity-50 transition-colors"
+                      >
+                        {regenerating ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4" />
+                        )}
+                        再生成する
+                      </button>
                     </div>
                   </div>
                 </div>,
@@ -780,6 +931,20 @@ export function LibraryManageView() {
                       </button>
                     </div>
                     <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-5">
+                      <button
+                        type="button"
+                        onClick={handleBulkPaste}
+                        disabled={generatingPrompt}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-neutral-200 rounded-xl text-sm font-medium text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
+                      >
+                        <ClipboardPaste className="w-4 h-4" />
+                        一括貼り付け（SwipeLPからコピーした内容を入力）
+                      </button>
+                      {bulkPasteStatus && (
+                        <p className={`text-sm ${bulkPasteStatus.includes("失敗") || bulkPasteStatus.includes("空") ? "text-amber-600" : "text-green-600"}`}>
+                          {bulkPasteStatus}
+                        </p>
+                      )}
                       <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-2">メインコピー *</label>
                         <input

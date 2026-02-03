@@ -180,9 +180,24 @@ const STRUCTURED_SYSTEM = `この広告画像を分析し、以下のJSON形式�
 - 例: "Centered symmetry, balanced layout, generous white space"
 
 ### typography
-フォント詳細を1文で:
-- 例: "Bold gothic typography, headline weight 900, body weight 700, outer glow on accent text"
-- 例: "Handwritten marker style, casual friendly feel, medium weight"
+フォント詳細**と装飾要素**を1-2文で:
+
+**記述すべき内容:**
+- フォント種類: Bold gothic / Modern sans-serif / Handwritten 等
+- ウェイト: headline weight 900, body weight 700 等
+- 特殊効果: outer glow / drop shadow / outlined 等
+- **テキストボックス**: 背景ボックスの有無・形状・色・影（重要！）
+
+**良い例（明るいトーン - ボックスあり）:**
+"Modern sans-serif typography, headline weight 900, body weight 700. Text placed in white rounded rectangle boxes (border-radius: 20px, padding: 15px 30px) with soft drop shadows."
+
+**良い例（暗いトーン - ボックスあり）:**
+"Bold gothic typography, headline weight 900, body weight 700. Text on dark blue rectangular boxes with drop shadows and outer glow on accent text."
+
+**良い例（ボックスなし）:**
+"Handwritten marker style, medium weight, no background boxes, casual friendly feel."
+
+**重要**: 画像内のテキストに背景ボックスがある場合、必ずその詳細（形状・色・影）を記述すること。"no special effects" と書かないこと。
 
 ### colors
 HEXコード含む具体的配色:
@@ -190,10 +205,32 @@ HEXコード含む具体的配色:
 - 例: "White background with blue accents, accent yellow #FFD700, overall bright cheerful mood"
 
 ### decorations
-画像に存在する装飾要素を配列で（明るい/暗いに応じて選択）:
-- 明るい系: ["Geometric shapes", "Pattern overlays", "Sticker icons", "Gradient overlays"]
-- 暗い系: ["Grunge texture", "Cracked concrete", "Film grain", "Vignette effect", "Drop shadows"]
-- 例: ["Cracked concrete texture", "Film grain", "Vignette effect", "Drop shadows on boxes"]
+画像に存在する装飾要素を**具体的に**配列で列挙（必ず画像を詳細に観察すること）:
+
+**テキスト装飾（重要 - 必ずチェック）:**
+- "White rounded rectangle boxes" - テキストの背景に白い角丸ボックスがある場合
+- "Colored banner boxes" - テキストの背景に色付きバナーがある場合
+- "Text boxes with drop shadow" - ボックスに影がある場合
+- "Outlined text boxes" - テキストボックスに枠線がある場合
+- "Semi-transparent overlay boxes" - 半透明のボックスがある場合
+
+**アイコン・バッジ装飾:**
+- "Badge/medal icons with ribbons" - メダル型のアイコン
+- "Circular badge decorations" - 円形バッジ
+- "Star/sparkle decorations" - キラキラ装飾
+- "Checkmark icons in boxes" - チェックマーク付きボックス
+
+**背景装飾:**
+- 明るい系: ["Gradient overlay", "Pattern overlays", "Geometric shapes", "Soft shadows", "Pastel accents"]
+- 暗い系: ["Grunge texture", "Cracked concrete", "Film grain", "Vignette effect", "Heavy shadows"]
+
+**例（明るいトーン）:**
+["White rounded rectangle text boxes", "Soft drop shadows", "Badge icons with ribbons", "Sparkle decorations", "Gradient overlay"]
+
+**例（暗いトーン）:**
+["Cracked concrete texture", "Film grain", "Vignette effect", "Drop shadows on boxes", "Grunge overlay"]
+
+**重要**: 画像内のテキストに背景ボックスがある場合、必ず "White rounded rectangle boxes" や "Colored banner boxes" を含めること。
 
 ### mood
 全体の雰囲気を1フレーズで:
@@ -207,17 +244,46 @@ HEXコード含む具体的配色:
 
 **必須要素:**
 1. 配置（position）: top-left / center / bottom-center 等
-2. フォント詳細: Bold gothic / Handwritten / Sans-serif + weight
-3. 文字色: white / black / gold 等
-4. 背景・装飾: 色付きボックス / バナー / 影 / グロー効果
+2. フォント詳細: Bold gothic / Modern sans-serif / Handwritten + weight
+3. 文字色: white / black / gold / blue 等
+4. **背景ボックス（最重要）**: 
+   - 有無: yes/no
+   - 形状: rounded rectangle / rectangle / banner / circle / none
+   - 色: white / colored / transparent / semi-transparent
+   - 装飾: drop shadow / soft shadow / border / outline / none
+   - サイズ: padding, border-radius の具体的な値（推定可）
 5. 役割: creates [感情] tone（例: creates serious tone / creates friendly feel）
 
-**良い例:**
-"Bold aggressive modern sans-serif text in black on yellow background, positioned top-right, creates serious professional tone"
+**良い例（明るいトーン - 白いボックス）:**
+"Centered bold text in modern sans-serif (weight 700) on white rounded rectangle box (border-radius: 20px, padding: 15px 30px) with soft drop shadow (rgba(0,0,0,0.1)), creates clean modern feel"
 
-"Soft gentle handwritten marker text in white with subtle drop shadow, positioned center-left, creates casual friendly feel"
+**良い例（明るいトーン - 色付きバナー）:**
+"Bold text in white on blue banner box (rectangular, padding: 10px 40px) with soft shadow, positioned center, draws attention to key message"
 
-"Centered bold text in white on dark blue rectangular box with drop shadow, draws attention to main message"
+**良い例（明るいトーン - ボックスなし）:**
+"Centered medium-weight text in blue, modern sans-serif, no background box, gentle soft appearance"
+
+**良い例（暗いトーン - 暗いボックス）:**
+"Bold aggressive text in white on navy blue rectangular box (padding: 20px) with drop shadow and gold outer glow on keywords, positioned top-left, creates serious professional tone"
+
+**悪い例（NG）:**
+"Centered text, no background" ← 背景ボックスの詳細が不足
+"Bold text" ← フォント・色・装飾の情報が不足
+
+**重要注意事項:**
+- 画像内のテキストに白いボックスや色付きボックスがある場合、**必ず** "on white rounded rectangle box" や "on blue banner box" のように具体的に記述すること
+- "no background" と書くのは、本当に背景が透明またはベタ塗りの場合のみ
+- ボックスがある場合に "no background" と書くのは**間違い**
+
+---
+
+## 全体の重要チェックリスト
+
+出力前に必ず確認:
+- [ ] decorations に「テキストボックス」関連の装飾（"White rounded rectangle boxes" 等）が含まれているか？
+- [ ] typography に「テキストボックスの詳細」（形状・色・影）が記述されているか？
+- [ ] 各 textSlot の description に「背景ボックスの有無・詳細」が明記されているか？
+- [ ] "no special effects" や "no background" を不適切に使用していないか？
 
 **出力形式:**
 {

@@ -43,11 +43,27 @@ export interface SwipeLPv3Slide {
   /** チェックリスト・キャプション等の追加テキスト（baseプロンプトの複数の「」ブロックを埋める） */
   additionalText?: string[];
   emotion?: string;
-  /** このスライドで選択したデザインテンプレートID */
+  /** ビジュアル方向性。人物/商品/空間、撮影イメージのヒント */
+  visualHint?: string;
+  /** 前スライドとの接続・ストーリー上の役割 */
+  storyNote?: string;
+  /** このスライドで伝えたい1行サマリー */
+  keyTakeaway?: string;
+  /** 代替キャッチコピー案（A/Bテスト用） */
+  messageAlternatives?: string[];
+  /** CTAスライド時: ボタン文言 */
+  ctaButtonText?: string;
+  /** CTAスライド時: 緊急性・限定感 */
+  ctaUrgency?: string;
+  /** ナレーション原稿（VO・読み上げ用） */
+  narration?: string;
+  /** @deprecated ライブラリでプロンプト生成 */
   selected_template_id?: string | null;
-  /** true: 人物なし・背景単色・動画オーバーレイ用 */
+  /** @deprecated ライブラリでプロンプト生成 */
   excludePerson?: boolean;
+  /** @deprecated ライブラリでプロンプト生成 */
   prompt?: string;
+  /** @deprecated ライブラリでプロンプト生成 */
   promptGeneratedAt?: string;
 }
 

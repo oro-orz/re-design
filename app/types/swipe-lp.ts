@@ -77,6 +77,13 @@ export interface Slide {
   subMessage?: string;
   additionalText?: string[];
   emotion?: string;
+  visualHint?: string;
+  storyNote?: string;
+  keyTakeaway?: string;
+  messageAlternatives?: string[];
+  narration?: string;
+  ctaButtonText?: string;
+  ctaUrgency?: string;
   prompt: string;
   locked?: boolean;
   /** Gaudí 2.0: デザインバリエーション */

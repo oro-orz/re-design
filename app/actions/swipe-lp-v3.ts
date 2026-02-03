@@ -5,12 +5,7 @@ import { runMarketingAnalysis } from "@/lib/swipe-lp/gaudi/marketing/analyzer";
 import {
   generateSlideStructureForV3,
 } from "@/lib/swipe-lp/gaudi/slides/structure-generator";
-import { generateContentForTemplate } from "@/lib/swipe-lp/gaudi/prompts/content-for-template";
-import {
-  assembleStructuredPrompt,
-  assembleTraditionalPrompt,
-} from "@/lib/swipe-lp/gaudi/prompts/assemble-structured";
-import type { PromptTemplate, SwipeLPv3Project, SwipeLPv3Slide } from "@/types/swipe-lp-v3";
+import type { SwipeLPv3Project, SwipeLPv3Slide } from "@/types/swipe-lp-v3";
 
 /**
  * v3プロジェクト作成 + URL分析開始
@@ -304,84 +299,6 @@ export async function updateSelectedTemplate(
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
     .update({ selected_template_id: templateId })
-    .eq("id", projectId)
-    .eq("user_id", user.id);
-
-  if (error) return { error: error.message };
-  return {};
-}
-
-/**
- * 1スライドのプロンプトを生成
- * テンプレートに style_json + slots_json があれば構造化パス、なければ従来のテキスト置換
- */
-export async function generatePromptForSlide(
-  projectId: string,
-  slideId: string
-): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "認証が必要です" };
-
-  const { data: project } = await supabase
-    .from("swipe_lp_v3_projects")
-    .select("*")
-    .eq("id", projectId)
-    .eq("user_id", user.id)
-    .single();
-
-  if (!project) return { error: "プロジェクトが見つかりません" };
-
-  const slides = (project.slides ?? []) as SwipeLPv3Slide[];
-  const slideIndex = slides.findIndex((s) => s.id === slideId);
-  if (slideIndex < 0) return { error: "スライドが見つかりません" };
-
-  const slide = slides[slideIndex];
-  const templateId = slide.selected_template_id ?? null;
-
-  if (!templateId) {
-    return { error: "デザインテンプレートが選択されていません" };
-  }
-
-  const { data: template, error: templateError } = await supabase
-    .from("prompt_templates")
-    .select("*")
-    .eq("id", templateId)
-    .single();
-
-  if (templateError || !template) {
-    return { error: "テンプレートが見つかりません" };
-  }
-
-  const excludePerson = slide.excludePerson ?? false;
-  let prompt: string;
-
-  const tmpl = template as PromptTemplate;
-  if (tmpl.style_json && tmpl.slots_json) {
-    const content = await generateContentForTemplate(
-      slide,
-      project.marketing_analysis ?? null,
-      tmpl.slots_json,
-      tmpl.style_json ?? null,
-      excludePerson
-    );
-    prompt = assembleStructuredPrompt(tmpl, content, excludePerson);
-  } else {
-    prompt = assembleTraditionalPrompt(tmpl, slide, excludePerson);
-  }
-
-  const updatedSlides = [...slides];
-  updatedSlides[slideIndex] = {
-    ...slide,
-    prompt,
-    promptGeneratedAt: new Date().toISOString(),
-  };
-
-  const { error } = await supabase
-    .from("swipe_lp_v3_projects")
-    .update({ slides: updatedSlides, status: "prompts_ready" })
     .eq("id", projectId)
     .eq("user_id", user.id);
 

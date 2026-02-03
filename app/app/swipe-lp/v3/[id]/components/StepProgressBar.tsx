@@ -8,22 +8,20 @@ const STEPS = [
   { label: "分析結果" },
   { label: "補足入力" },
   { label: "スライド構成" },
-  { label: "プロンプト" },
 ];
 
 function getStepIndex(status: SwipeLPv3Status): number {
   switch (status) {
     case "url_input":
     case "analyzing":
-      return 1; // Step2 表示中 or 分析中
+      return 1;
     case "analysis_done":
-      return 1; // Step2 分析結果
+      return 1;
     case "supplement_input":
-      return 2; // Step3 補足入力
+      return 2;
     case "slides_ready":
-      return 3; // Step4 スライド構成
     case "prompts_ready":
-      return 4; // Step5 プロンプト
+      return 3; // Step4 スライド構成（prompts_ready は既存データ互換）
     default:
       return 1;
   }

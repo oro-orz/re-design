@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Loader2, RefreshCw, RotateCcw, Library, ExternalLink } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, RotateCcw, ExternalLink, ImagePlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UploadZone } from "../components/UploadZone";
 import { ResultView } from "../components/ResultView";
@@ -157,7 +157,7 @@ export default function FeedbackPage() {
       <header className="sticky top-0 z-10 shrink-0 flex items-center justify-between min-h-[52px] px-4 py-2 bg-white border-b border-neutral-200">
         <div className="flex items-center gap-2 min-w-0">
           <div className="min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 leading-tight">フィードバック</h1>
+            <h1 className="text-sm font-bold text-neutral-900 leading-tight">Re:Design</h1>
             <p className="text-[10px] text-neutral-500 leading-tight">デザインにフィードバックします</p>
           </div>
         </div>
@@ -166,8 +166,15 @@ export default function FeedbackPage() {
             href="/"
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
           >
-            <Library className="w-3 h-3 shrink-0" />
-            ライブラリ
+            <Sparkles className="w-3 h-3 shrink-0" />
+            プロンプト生成
+          </Link>
+          <Link
+            href="/overlay-mode/new"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <ImagePlus className="w-3 h-3 shrink-0" />
+            ベース生成
           </Link>
           <a
             href="https://gemini.google.com/app"
