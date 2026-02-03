@@ -1,43 +1,45 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Download, Copy, Loader2, RotateCcw, RefreshCw, ExternalLink } from "lucide-react";
+import { useCallback, useState, useMemo } from "react";
+import { Download, Copy, Loader2 } from "lucide-react";
 
 type Props = {
   originalUrl: string;
   generatedUrl: string | null;
   feedback: string;
-  fluxPrompt: string;
-  mode: string;
   loading?: boolean;
-  onRetryWithSettings?: () => void;
-  onReset?: () => void;
 };
 
-function buildDesignerText(feedback: string, fluxPrompt: string, mode: string) {
-  return `【フィードバック】\n${feedback}\n\n【モード】${mode}\n【生成プロンプト】\n${fluxPrompt}`;
+/** "## 見出し\n本文..." 形式のテキストをセクションに分割。見出しがない場合は全文を1つの本文として返す */
+function parseFeedbackSections(text: string): { title: string; body: string }[] {
+  if (!text.includes("## ")) return [{ title: "", body: text.trim() }];
+  const sections: { title: string; body: string }[] = [];
+  const parts = text.split(/(?=##\s)/).filter(Boolean);
+  for (const part of parts) {
+    const firstLineEnd = part.indexOf("\n");
+    const rawFirstLine = firstLineEnd === -1 ? part : part.slice(0, firstLineEnd);
+    const title = rawFirstLine.replace(/^##\s*/, "").trim();
+    const body = firstLineEnd === -1 ? "" : part.slice(firstLineEnd + 1).trim();
+    if (title || body) sections.push({ title, body });
+  }
+  if (sections.length === 0) return [{ title: "", body: text.trim() }];
+  return sections;
 }
 
 export function ResultView({
   originalUrl,
   generatedUrl,
   feedback,
-  fluxPrompt,
-  mode,
   loading,
-  onRetryWithSettings,
-  onReset,
 }: Props) {
   const [copied, setCopied] = useState(false);
-  const [showLinks, setShowLinks] = useState(false);
+  const sections = useMemo(() => parseFeedbackSections(feedback), [feedback]);
 
   const handleCopy = useCallback(async () => {
-    const text = buildDesignerText(feedback, fluxPrompt, mode);
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(feedback);
     setCopied(true);
-    setShowLinks(true);
     setTimeout(() => setCopied(false), 2000);
-  }, [feedback, fluxPrompt, mode]);
+  }, [feedback]);
 
   const handleDownload = useCallback(() => {
     if (!generatedUrl) return;
@@ -50,124 +52,55 @@ export function ResultView({
   return (
     <div className="space-y-6">
       {feedback && (
-        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-          <h3 className="mb-2 text-sm font-semibold text-neutral-900">フィードバック</h3>
-          <p className="whitespace-pre-wrap text-sm text-neutral-700">
-            {feedback}
-          </p>
-        </div>
-      )}
-
-      {fluxPrompt && (
-        <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-neutral-900">生成プロンプト</h3>
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <h3 className="mb-3 text-sm font-semibold text-neutral-900">デザインフィードバック</h3>
+            <div className="space-y-4">
+              {sections.map(({ title, body }, i) => (
+                <section key={i} className="border-b border-neutral-100 pb-3 last:border-0 last:pb-0">
+                  {title && (
+                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                      {title}
+                    </h4>
+                  )}
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700">
+                    {body || "—"}
+                  </p>
+                </section>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center">
             <button
               type="button"
-              onClick={async () => {
-                await navigator.clipboard.writeText(fluxPrompt);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-600 transition-colors hover:border-neutral-300"
+              onClick={handleCopy}
+              disabled={loading}
+              className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
             >
-              <Copy className="h-3 w-3" />
-              プロンプトのみコピー
+              <Copy className="h-4 w-4" />
+              {copied ? "コピーしました" : "フィードバックをコピー"}
             </button>
           </div>
-          <textarea
-            readOnly
-            value={fluxPrompt}
-            className="w-full resize-none rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700 font-mono focus:outline-none"
-            rows={8}
-            onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-          />
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-center">
-          <p className="text-xs leading-relaxed text-neutral-600">
-            「元画像」「フィードバック」「プロンプト」をコピーし、NanoBanana などの画像生成AIへ入力すると、より高品質な画像を作成できます。
-          </p>
-          <p className="mt-2 text-xs leading-relaxed text-neutral-600">
-            日本語テキストがうまく生成できない場合はブラウザ版のGemini（NanoBanana）等で再度試してください。
-          </p>
-          <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5 text-xs">
-            <a
-              href="https://gemini.google/jp/overview/image-generation/?hl=ja-JP"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
-            >
-              NanoBanana
-            </a>
-            <span className="text-neutral-300">/</span>
-            <a
-              href="https://openai.com/index/dall-e-3/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
-            >
-              DALL·E 3
-            </a>
-            <span className="text-neutral-300">/</span>
-            <a
-              href="https://www.midjourney.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-neutral-700 underline decoration-neutral-300 underline-offset-2 hover:text-neutral-900 hover:decoration-neutral-500"
-            >
-              Midjourney
-            </a>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleCopy}
-          disabled={!feedback || loading}
-          className="inline-flex items-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:opacity-50"
-        >
-          <Copy className="h-4 w-4" />
-          {copied ? "コピーしました" : "フィードバック+プロンプトをコピー"}
-        </button>
-        {showLinks && (
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <a
-              href="https://gemini.google/jp/overview/image-generation/?hl=ja-JP"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              NanoBanana
-            </a>
-            <a
-              href="https://openai.com/index/dall-e-3/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              DALL·E 3
-            </a>
-            <a
-              href="https://www.midjourney.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-neutral-50"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Midjourney
-            </a>
-          </div>
-        )}
-      </div>
-
       {loading ? (
-        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-          <div className="flex min-h-[320px] items-center justify-center">
-            <Loader2 className="h-10 w-10 animate-spin text-neutral-400" />
+        <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white p-8">
+          <div className="flex min-h-[280px] flex-col items-center justify-center gap-6">
+            <Loader2 className="h-12 w-12 animate-spin text-neutral-400" />
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-neutral-700">分析中...</p>
+              <p className="text-xs text-neutral-500">デザインフィードバックを生成しています</p>
+            </div>
+            <div className="flex w-full max-w-xs gap-1">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="h-1 flex-1 animate-pulse rounded-full bg-neutral-200"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       ) : generatedUrl ? (
@@ -199,32 +132,6 @@ export function ResultView({
         </div>
       )}
 
-      {(onRetryWithSettings || onReset) && (
-        <div className="flex flex-wrap gap-2 border-t border-neutral-200 pt-4">
-          {onRetryWithSettings && (
-            <button
-              type="button"
-              onClick={onRetryWithSettings}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 disabled:opacity-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-              設定を変更してやり直す
-            </button>
-          )}
-          {onReset && (
-            <button
-              type="button"
-              onClick={onReset}
-              disabled={loading}
-              className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:border-neutral-300 disabled:opacity-50"
-            >
-              <RotateCcw className="h-4 w-4" />
-              リセットして別の画像で再生成する
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

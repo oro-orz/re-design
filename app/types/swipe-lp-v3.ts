@@ -62,6 +62,7 @@ export interface PromptTemplate {
   image_urls?: string[] | null;
   memo?: string | null;
   category?: string | null;
+  subcategory?: string | null;
   /** 構造化: デザインスタイル定義（配色・レイアウト・フォント等） */
   style_json?: TemplateStyle | null;
   /** 構造化: テキストスロット定義 */

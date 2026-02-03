@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS prompt_templates (
 ALTER TABLE prompt_templates ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]';
 ALTER TABLE prompt_templates ADD COLUMN IF NOT EXISTS prompt_text TEXT;
 ALTER TABLE prompt_templates ADD COLUMN IF NOT EXISTS memo TEXT;
+ALTER TABLE prompt_templates ADD COLUMN IF NOT EXISTS subcategory TEXT;
 
 ALTER TABLE prompt_templates ENABLE ROW LEVEL SECURITY;
 

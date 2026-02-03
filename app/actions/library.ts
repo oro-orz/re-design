@@ -107,6 +107,7 @@ export async function uploadAndCreateTemplatesFromImages(
         image_urls: [urls[i]],
         memo: g.memo || null,
         category: g.category || null,
+        subcategory: null,
         style_json: g.style_json,
         slots_json: g.slots_json,
       });
@@ -283,7 +284,7 @@ export async function updatePromptTemplate(
   updates: Partial<
     Pick<
       PromptTemplate,
-      "name" | "category" | "memo" | "base_prompt" | "style_json" | "slots_json"
+      "name" | "category" | "subcategory" | "memo" | "base_prompt" | "style_json" | "slots_json"
     >
   >
 ): Promise<{ template?: PromptTemplate; error?: string }> {
@@ -297,6 +298,7 @@ export async function updatePromptTemplate(
   const updateData: Record<string, unknown> = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.category !== undefined) updateData.category = updates.category;
+  if (updates.subcategory !== undefined) updateData.subcategory = updates.subcategory;
   if (updates.memo !== undefined) updateData.memo = updates.memo;
   if (updates.base_prompt !== undefined) updateData.base_prompt = updates.base_prompt;
   if (updates.style_json !== undefined) updateData.style_json = updates.style_json;
