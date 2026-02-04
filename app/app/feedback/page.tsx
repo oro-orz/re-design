@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles, Loader2, RefreshCw, RotateCcw, ExternalLink, ImagePlus, UsersRound } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, RotateCcw, ExternalLink, ImagePlus, UsersRound, LayoutList, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UploadZone } from "../components/UploadZone";
 import { ResultView } from "../components/ResultView";
@@ -183,6 +183,17 @@ export default function FeedbackPage() {
             <UsersRound className="w-3 h-3 shrink-0" />
             キャラ生成
           </Link>
+          <Link
+            href="/swipe-lp/"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <LayoutList className="w-3 h-3 shrink-0" />
+            スライド生成
+          </Link>
+          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-600">
+            <MessageSquare className="w-3 h-3 shrink-0" />
+            フィードバック
+          </span>
           <a
             href="https://gemini.google.com/app"
             target="_blank"

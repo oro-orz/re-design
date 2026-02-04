@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus, UsersRound } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus, UsersRound, LayoutList } from "lucide-react";
 import {
   listPromptTemplates,
   deletePromptTemplate,
@@ -157,6 +157,8 @@ function SlotsJsonEditor({
 }
 
 export function LibraryManageView() {
+  const pathname = usePathname();
+  const isPromptGenPage = pathname === "/" || pathname === "/library/manage";
   const [templates, setTemplates] = useState<PromptTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -430,6 +432,20 @@ export function LibraryManageView() {
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
+          {isPromptGenPage ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-neutral-100 border border-neutral-200 text-xs font-medium text-neutral-600">
+              <Sparkles className="w-3 h-3 shrink-0" />
+              プロンプト生成
+            </span>
+          ) : (
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+            >
+              <Sparkles className="w-3 h-3 shrink-0" />
+              プロンプト生成
+            </Link>
+          )}
           <Link
             href="/overlay-mode/new"
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
@@ -443,6 +459,13 @@ export function LibraryManageView() {
           >
             <UsersRound className="w-3 h-3 shrink-0" />
             キャラ生成
+          </Link>
+          <Link
+            href="/swipe-lp/"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <LayoutList className="w-3 h-3 shrink-0" />
+            スライド生成
           </Link>
           <Link
             href="/feedback"

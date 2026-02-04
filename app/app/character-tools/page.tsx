@@ -12,6 +12,7 @@ import {
   Library,
   Loader2,
   Download,
+  LayoutList,
 } from "lucide-react";
 import { listPromptTemplates } from "@/actions/library";
 import type { CharacterToolsMode } from "@/actions/character-tools";
@@ -321,6 +322,13 @@ function CharacterToolsContent() {
             <UsersRound className="w-3 h-3 shrink-0" />
             キャラ生成
           </span>
+          <Link
+            href="/swipe-lp/"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <LayoutList className="w-3 h-3 shrink-0" />
+            スライド生成
+          </Link>
           <Link
             href="/feedback"
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"

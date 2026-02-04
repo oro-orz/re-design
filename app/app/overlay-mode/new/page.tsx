@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Users, Library, MessageSquare, ExternalLink, Upload, Loader2, Sparkles, ImagePlus, UsersRound } from "lucide-react";
+import { Users, Library, MessageSquare, ExternalLink, Upload, Loader2, Sparkles, ImagePlus, UsersRound, LayoutList } from "lucide-react";
 import { uploadAndGenerateBase } from "@/actions/overlay-mode";
 import { listPromptTemplates } from "@/actions/library";
 import { BaseImageResult } from "@/app/components/overlay-mode/BaseImageResult";
@@ -303,6 +303,13 @@ function NewOverlayModeContent() {
           >
             <UsersRound className="w-3 h-3 shrink-0" />
             キャラ生成
+          </Link>
+          <Link
+            href="/swipe-lp/"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+          >
+            <LayoutList className="w-3 h-3 shrink-0" />
+            スライド生成
           </Link>
           <Link
             href="/feedback"

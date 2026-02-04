@@ -4,13 +4,13 @@ import { Check } from "lucide-react";
 import type { SwipeLPv3Status } from "@/types/swipe-lp-v3";
 
 const STEPS = [
-  { label: "URL入力" },
-  { label: "分析結果" },
-  { label: "補足入力" },
-  { label: "スライド構成" },
+  { label: "URL" },
+  { label: "分析" },
+  { label: "補足" },
+  { label: "スライド" },
 ];
 
-function getStepIndex(status: SwipeLPv3Status): number {
+export function getStepIndex(status: SwipeLPv3Status): number {
   switch (status) {
     case "url_input":
     case "analyzing":
@@ -21,7 +21,7 @@ function getStepIndex(status: SwipeLPv3Status): number {
       return 2;
     case "slides_ready":
     case "prompts_ready":
-      return 3; // Step4 スライド構成（prompts_ready は既存データ互換）
+      return 3;
     default:
       return 1;
   }
@@ -31,38 +31,37 @@ export function StepProgressBar({ status }: { status: SwipeLPv3Status }) {
   const currentIndex = getStepIndex(status);
 
   return (
-    <nav className="flex items-center justify-between gap-2 py-4">
+    <nav className="flex items-center gap-1.5 py-2">
       {STEPS.map((step, i) => {
         const isComplete = i < currentIndex;
         const isCurrent = i === currentIndex;
         return (
           <div
             key={step.label}
-            className={`flex items-center gap-2 flex-1 ${
-              i < STEPS.length - 1 ? "min-w-0" : ""
-            }`}
+            className="flex items-center gap-1 flex-shrink-0"
           >
             <div
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
+              className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
                 isComplete
                   ? "bg-green-500 text-white"
                   : isCurrent
-                    ? "bg-neutral-900 text-white ring-2 ring-neutral-900 ring-offset-2"
+                    ? "bg-neutral-900 text-white ring-1 ring-neutral-900 ring-offset-1"
                     : "bg-neutral-200 text-neutral-500"
               }`}
+              title={step.label}
             >
-              {isComplete ? <Check className="w-5 h-5" /> : i + 1}
+              {isComplete ? <Check className="w-3 h-3" /> : i + 1}
             </div>
             <span
-              className={`text-xs font-medium truncate hidden sm:inline ${
-                isCurrent ? "text-neutral-900" : "text-neutral-600"
+              className={`text-[10px] font-medium hidden sm:inline ${
+                isCurrent ? "text-neutral-900" : "text-neutral-500"
               }`}
             >
               {step.label}
             </span>
             {i < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-1 ${
+                className={`w-3 h-px mx-0.5 flex-shrink-0 ${
                   isComplete ? "bg-green-500" : "bg-neutral-200"
                 }`}
               />

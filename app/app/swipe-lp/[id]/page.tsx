@@ -1,9 +1,17 @@
-import { redirect } from "next/navigation";
+import "@/lib/polyfill-file";
+import { getV3Project } from "@/actions/swipe-lp-v3";
+import { notFound } from "next/navigation";
+import SwipeLPv3View from "../v3/[id]/SwipeLPv3View";
 
 type Props = { params: Promise<{ id: string }> };
 
-/** 旧形式の /swipe-lp/[id] を v3 へリダイレクト */
-export default async function OldSwipeLPProjectRedirect({ params }: Props) {
+export default async function SwipeLPProjectPage({ params }: Props) {
   const { id } = await params;
-  redirect(`/swipe-lp/v3/${id}`);
+  const { project, error } = await getV3Project(id);
+
+  if (error || !project) {
+    notFound();
+  }
+
+  return <SwipeLPv3View project={project} />;
 }

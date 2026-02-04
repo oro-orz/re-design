@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { OutputTone } from "@/types/swipe-lp-v3";
+import { StepSectionHeader } from "./StepSectionHeader";
 
 export interface Step3FormValues {
   user_supplement: string;
@@ -37,6 +38,11 @@ const SLIDE_COUNT_OPTIONS: { value: number | null; label: string }[] = [
   { value: 8, label: "8枚" },
 ];
 
+const inputBase =
+  "w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-transparent disabled:opacity-60 disabled:bg-neutral-50";
+const labelBase =
+  "block text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5";
+
 export function Step3Supplement({
   initialSupplement,
   initialEmphasisPoints,
@@ -64,96 +70,87 @@ export function Step3Supplement({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold mb-2">Step 3: スライドテキストの設定</h2>
-        <p className="text-sm text-neutral-600 mb-6">
-          生成するスライドのトーンや強調したい点、枚数を指定できます。任意項目は空欄のまま次へ進めます。
-        </p>
-      </div>
+      <StepSectionHeader
+        step={3}
+        title="スライドテキストの設定"
+        subtitle="トーン・強調点・枚数を指定できます。任意項目は空欄でOKです"
+      />
 
-      <div className="space-y-4">
-        <label className="block">
-          <span className="block text-sm font-medium text-neutral-700 mb-1">
-            特に強調したい点
+      <div className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
+        <div className="px-4 py-2.5 bg-neutral-50 border-b border-neutral-200">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+            設定項目
           </span>
-          <textarea
-            value={emphasisPoints}
-            onChange={(e) => setEmphasisPoints(e.target.value)}
-            rows={3}
-            placeholder="例：料金の安さ、即日対応、実績の多さ、サポート体制"
-            className="w-full border-2 border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:border-neutral-900 resize-none disabled:opacity-60 disabled:bg-neutral-50"
-            disabled={isSubmitting}
-          />
-        </label>
-
-        <label className="block">
-          <span className="block text-sm font-medium text-neutral-700 mb-1">
-            テキストのトーン
-          </span>
-          <select
-            value={outputTone}
-            onChange={(e) => setOutputTone((e.target.value || "") as OutputTone | "")}
-            className="w-full border-2 border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:border-neutral-900 bg-white disabled:opacity-60 disabled:bg-neutral-50"
-            disabled={isSubmitting}
-          >
-            {TONE_OPTIONS.map((opt) => (
-              <option key={opt.value || "none"} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="block text-sm font-medium text-neutral-700 mb-1">
-            スライドの枚数指定
-          </span>
-          <select
-            value={slideCount ?? ""}
-            onChange={(e) =>
-              setSlideCount(e.target.value === "" ? null : Number(e.target.value))
-            }
-            className="w-full border-2 border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:border-neutral-900 bg-white disabled:opacity-60 disabled:bg-neutral-50"
-            disabled={isSubmitting}
-          >
-            {SLIDE_COUNT_OPTIONS.map((opt) => (
-              <option key={opt.value ?? "any"} value={opt.value ?? ""}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="block text-sm font-medium text-neutral-700 mb-1">
-            補足情報（任意）
-          </span>
-          <textarea
-            value={supplement}
-            onChange={(e) => setSupplement(e.target.value)}
-            rows={3}
-            placeholder="例：ターゲット層は20代女性。競合の〇〇との差別化を意識してほしい。"
-            className="w-full border-2 border-neutral-200 rounded-xl px-4 py-3 focus:outline-none focus:border-neutral-900 resize-none disabled:opacity-60 disabled:bg-neutral-50"
-            disabled={isSubmitting}
-          />
-        </label>
-      </div>
-
-      {isSubmitting && (
-        <div className="flex items-center gap-3 py-3 px-4 bg-neutral-100 rounded-xl text-neutral-700">
-          <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
-          <p className="text-sm">
-            スライド構成を生成しています。しばらくお待ちください…
-          </p>
         </div>
-      )}
+        <div className="p-4 space-y-4">
+          <label className="block">
+            <span className={labelBase}>特に強調したい点</span>
+            <textarea
+              value={emphasisPoints}
+              onChange={(e) => setEmphasisPoints(e.target.value)}
+              rows={2}
+              placeholder="料金の安さ、即日対応、実績の多さ..."
+              className={`${inputBase} resize-none`}
+              disabled={isSubmitting}
+            />
+          </label>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <label className="block">
+              <span className={labelBase}>テキストのトーン</span>
+              <select
+                value={outputTone}
+                onChange={(e) => setOutputTone((e.target.value || "") as OutputTone | "")}
+                className={`${inputBase} bg-white`}
+                disabled={isSubmitting}
+              >
+                {TONE_OPTIONS.map((opt) => (
+                  <option key={opt.value || "none"} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block">
+              <span className={labelBase}>スライド枚数</span>
+              <select
+                value={slideCount ?? ""}
+                onChange={(e) =>
+                  setSlideCount(e.target.value === "" ? null : Number(e.target.value))
+                }
+                className={`${inputBase} bg-white`}
+                disabled={isSubmitting}
+              >
+                {SLIDE_COUNT_OPTIONS.map((opt) => (
+                  <option key={opt.value ?? "any"} value={opt.value ?? ""}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="block">
+            <span className={labelBase}>補足情報（任意）</span>
+            <textarea
+              value={supplement}
+              onChange={(e) => setSupplement(e.target.value)}
+              rows={2}
+              placeholder="ターゲット層、競合との差別化など..."
+              className={`${inputBase} resize-none`}
+              disabled={isSubmitting}
+            />
+          </label>
+        </div>
+      </div>
 
       <div className="flex gap-3">
         <button
           type="button"
           onClick={onBack}
           disabled={isSubmitting}
-          className="flex-1 border-2 border-neutral-300 text-neutral-700 py-4 rounded-xl font-bold hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 border border-neutral-200 text-neutral-700 py-3 rounded-lg text-sm font-semibold hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           戻る
         </button>
@@ -161,11 +158,11 @@ export function Step3Supplement({
           type="button"
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="flex-1 bg-neutral-900 text-white py-4 rounded-xl font-bold hover:bg-neutral-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 bg-neutral-900 text-white py-3 rounded-lg text-sm font-semibold hover:bg-neutral-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               生成中…
             </>
           ) : (

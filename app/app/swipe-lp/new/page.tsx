@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-/** 旧 /swipe-lp/new を v3 へリダイレクト */
+/** /swipe-lp/new を /swipe-lp/ へリダイレクト */
 export default function NewSwipeLPRedirect() {
-  redirect("/swipe-lp/v3/new");
+  redirect("/swipe-lp/");
 }

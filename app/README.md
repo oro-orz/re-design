@@ -14,9 +14,9 @@
 
 | 項目 | 内容 |
 |------|------|
-| **入力** | `/swipe-lp/v3/new` で **URL**（Webページ）を入力 |
+| **入力** | `/swipe-lp/` で **URL**（Webページ）を入力 |
 | **処理** | HTML 取得 → 画像・テキスト抽出（cheerio）→ 主要画像の OCR（Google Vision、並列）→ GPT-4o で統合分析 → スライド構成 & 各スライドの NanoBanana 用プロンプト（9:16）生成 |
-| **結果** | `/swipe-lp/v3/[id]` で AI 分析・スライド編集・デザイン選択・プロンプト生成・コピー |
+| **結果** | `/swipe-lp/[id]` で AI 分析・スライド編集・デザイン選択・プロンプト生成・コピー |
 
 **WebページURL対応:** 画像直リンク（`.png` 等）は従来どおり Vision 1 枚で分析。`http(s)://` の URL は **fetchHtml → extractImages / extractTextFromHtml → OCR（MAX_OCR_IMAGES 枚、並列）→ GPT-4o** で分析する。
 
