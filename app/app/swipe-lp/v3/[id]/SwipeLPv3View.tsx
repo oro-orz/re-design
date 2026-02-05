@@ -38,9 +38,7 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
     setStep3Submitting(true);
     try {
       const updateResult = await updateStep3Settings(project.id, {
-        user_supplement: values.user_supplement,
         emphasis_points: values.emphasis_points,
-        output_tone: values.output_tone || null,
         slide_count: values.slide_count,
       });
       if (updateResult.error) {
@@ -244,9 +242,7 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
                 </div>
               )}
               <Step3Supplement
-                initialSupplement={project.user_supplement ?? ""}
                 initialEmphasisPoints={project.emphasis_points ?? ""}
-                initialOutputTone={project.output_tone ?? null}
                 initialSlideCount={project.slide_count ?? null}
                 onNext={handleStep3Next}
                 onBack={handleStep3Back}

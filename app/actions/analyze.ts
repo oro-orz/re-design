@@ -62,7 +62,7 @@ export async function analyze(params: {
         ],
       },
     ],
-    max_tokens: 2048,
+    max_completion_tokens: 2048,
   });
 
   const raw = res.choices[0]?.message?.content?.trim();

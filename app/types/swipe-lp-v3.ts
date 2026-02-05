@@ -15,6 +15,32 @@ export type SwipeLPv3Status =
 /** スライドテキストのトーン（Step 3 で指定） */
 export type OutputTone = "neutral" | "casual" | "professional" | "playful";
 
+/** スライド構成用の具体的なコピー要素（2段階パイプラインの Stage1 出力） */
+export interface SlideReadyCopy {
+  /** 共感・問題提起用の具体的な悩み文（3-5個） */
+  painPhrases: string[];
+  /** 行動しないリスクを可視化する文 */
+  riskPhrases: string[];
+  /** 解決策の見出し */
+  solutionHeadline: string;
+  /** 解決策のキャッチ */
+  solutionCatch: string;
+  /** メリットの箇条書き（数字・具体性あり） */
+  benefitBullets: string[];
+  /** 信頼・実績のポイント */
+  trustPoints: string[];
+  /** 申込みの流れ（3-4ステップ） */
+  flowSteps: string[];
+  /** 口コミの例文テンプレート（年代・属性付き） */
+  testimonialTemplates: string[];
+  /** CTA用の見出し・ボタン文言・補足 */
+  ctaVariants: {
+    headline?: string;
+    buttonText?: string;
+    supplement?: string;
+  };
+}
+
 export interface SwipeLPv3Project {
   id: string;
   user_id: string;

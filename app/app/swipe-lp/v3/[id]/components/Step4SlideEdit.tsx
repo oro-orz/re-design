@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Trash2, Copy, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { Trash2, Copy, Sparkles, WandSparkles } from "lucide-react";
 import type { SwipeLPv3Slide } from "@/types/swipe-lp-v3";
 import { updateV3Slides } from "@/actions/swipe-lp-v3";
 import { StepSectionHeader } from "./StepSectionHeader";
@@ -29,11 +29,6 @@ function formatForLibraryCopy(slide: SwipeLPv3Slide): string {
   return parts.join("\n");
 }
 
-function estimateNarrationSeconds(text: string): number {
-  if (!text?.trim()) return 0;
-  return Math.ceil(text.trim().length / 5);
-}
-
 interface Step4SlideEditProps {
   projectId: string;
   slides: SwipeLPv3Slide[];
@@ -55,7 +50,6 @@ export function Step4SlideEdit({
   );
   const [error, setError] = useState<string | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
-  const [expandedDetails, setExpandedDetails] = useState(true);
 
   useEffect(() => {
     setEditingSlides(slides);
@@ -168,6 +162,105 @@ export function Step4SlideEdit({
                 </button>
               ))}
             </div>
+
+            {/* デザインイメージ（選択スライドのビジュアル・ストーリー用メモ） */}
+            {selectedSlide && (
+              <div className="mt-6 rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 space-y-4 shadow-sm">
+                <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-900">
+                  <WandSparkles className="w-4 h-4 text-amber-600" />
+                  デザインイメージ
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">ビジュアル方向性</label>
+                    <input
+                      type="text"
+                      value={selectedSlide.visualHint ?? ""}
+                      onChange={(e) =>
+                        updateSlide(selectedSlide.id, { visualHint: e.target.value })
+                      }
+                      placeholder="例: 青空の下で笑顔の男性。解放感を演出"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">ストーリー上の役割</label>
+                    <input
+                      type="text"
+                      value={selectedSlide.storyNote ?? ""}
+                      onChange={(e) =>
+                        updateSlide(selectedSlide.id, { storyNote: e.target.value })
+                      }
+                      placeholder="例: ファーストビュー。理想の姿で引き込み"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">伝えたいこと（1行）</label>
+                    <input
+                      type="text"
+                      value={selectedSlide.keyTakeaway ?? ""}
+                      onChange={(e) =>
+                        updateSlide(selectedSlide.id, { keyTakeaway: e.target.value })
+                      }
+                      placeholder="例: 退職後の穏やかな生活をイメージさせる"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-600 mb-1">代替コピー案（A/Bテスト用）</label>
+                    <textarea
+                      value={
+                        Array.isArray(selectedSlide.messageAlternatives)
+                          ? selectedSlide.messageAlternatives.join("\n")
+                          : ""
+                      }
+                      onChange={(e) =>
+                        updateSlide(selectedSlide.id, {
+                          messageAlternatives: e.target.value
+                            .split("\n")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
+                            .slice(0, 2),
+                        })
+                      }
+                      placeholder="1行に1案（最大2案）"
+                      rows={2}
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none bg-white"
+                    />
+                  </div>
+                  {(selectedSlide.purpose?.toLowerCase().includes("cta") ||
+                    selectedSlide.purpose?.toLowerCase().includes("クロージング")) && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">ボタン文言</label>
+                        <input
+                          type="text"
+                          value={selectedSlide.ctaButtonText ?? ""}
+                          onChange={(e) =>
+                            updateSlide(selectedSlide.id, { ctaButtonText: e.target.value })
+                          }
+                          placeholder="例: LINEで無料相談"
+                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">緊急性・限定感</label>
+                        <input
+                          type="text"
+                          value={selectedSlide.ctaUrgency ?? ""}
+                          onChange={(e) =>
+                            updateSlide(selectedSlide.id, { ctaUrgency: e.target.value })
+                          }
+                          placeholder="例: 24時間受付"
+                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -176,17 +269,37 @@ export function Step4SlideEdit({
           <div className="p-6 max-w-2xl">
           {selectedSlide ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-bold text-neutral-500">
                   #{selectedSlide.order} {selectedSlide.purpose}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => removeSlide(selectedSlide.id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyForLibrary}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-xs font-medium text-neutral-700"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    プロンプト用にコピー
+                  </button>
+                  <Link
+                    href="/library/manage"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 rounded-lg text-xs font-medium text-neutral-700 transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    プロンプトを生成
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => removeSlide(selectedSlide.id)}
+                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                    aria-label="このスライドを削除"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -256,135 +369,6 @@ export function Step4SlideEdit({
                 />
               </div>
 
-              {/* 折りたたみ: 詳細 */}
-              <div className="border border-neutral-200 rounded-lg overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setExpandedDetails(!expandedDetails)}
-                  className="w-full flex items-center gap-2 px-4 py-3 bg-neutral-50 hover:bg-neutral-100 text-left text-sm font-medium"
-                >
-                  {expandedDetails ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4" />
-                  )}
-                  詳細
-                </button>
-                {expandedDetails && (
-                  <div className="p-4 space-y-4 border-t border-neutral-200">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1">
-                        ビジュアル方向性
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedSlide.visualHint ?? ""}
-                        onChange={(e) =>
-                          updateSlide(selectedSlide.id, {
-                            visualHint: e.target.value,
-                          })
-                        }
-                        placeholder="例: 青空の下で笑顔の男性。解放感を演出"
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1">
-                        ストーリー上の役割
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedSlide.storyNote ?? ""}
-                        onChange={(e) =>
-                          updateSlide(selectedSlide.id, {
-                            storyNote: e.target.value,
-                          })
-                        }
-                        placeholder="例: ファーストビュー。理想の姿で引き込み"
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1">
-                        伝えたいこと（1行）
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedSlide.keyTakeaway ?? ""}
-                        onChange={(e) =>
-                          updateSlide(selectedSlide.id, {
-                            keyTakeaway: e.target.value,
-                          })
-                        }
-                        placeholder="例: 退職後の穏やかな生活をイメージさせる"
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1">
-                        代替コピー案（A/Bテスト用）
-                      </label>
-                      <textarea
-                        value={
-                          Array.isArray(selectedSlide.messageAlternatives)
-                            ? selectedSlide.messageAlternatives.join("\n")
-                            : ""
-                        }
-                        onChange={(e) =>
-                          updateSlide(selectedSlide.id, {
-                            messageAlternatives: e.target.value
-                              .split("\n")
-                              .map((s) => s.trim())
-                              .filter(Boolean)
-                              .slice(0, 2),
-                          })
-                        }
-                        placeholder="1行に1案（最大2案）"
-                        rows={2}
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none"
-                      />
-                    </div>
-                    {(selectedSlide.purpose?.toLowerCase().includes("cta") ||
-                      selectedSlide.purpose?.toLowerCase().includes("クロージング")) && (
-                      <>
-                        <div>
-                          <label className="block text-xs font-medium text-neutral-500 mb-1">
-                            ボタン文言
-                          </label>
-                          <input
-                            type="text"
-                            value={selectedSlide.ctaButtonText ?? ""}
-                            onChange={(e) =>
-                              updateSlide(selectedSlide.id, {
-                                ctaButtonText: e.target.value,
-                              })
-                            }
-                            placeholder="例: LINEで無料相談"
-                            className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-neutral-500 mb-1">
-                            緊急性・限定感
-                          </label>
-                          <input
-                            type="text"
-                            value={selectedSlide.ctaUrgency ?? ""}
-                            onChange={(e) =>
-                              updateSlide(selectedSlide.id, {
-                                ctaUrgency: e.target.value,
-                              })
-                            }
-                            placeholder="例: 24時間受付"
-                            className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-
               <div>
                 <label className="block text-xs font-medium text-neutral-500 mb-1">
                   ナレーション原稿（VO・読み上げ用）
@@ -396,33 +380,10 @@ export function Step4SlideEdit({
                       narration: e.target.value,
                     })
                   }
-                  placeholder="話し言葉で15-30秒程度。テキストの補足・感情の深掘り"
+                  placeholder="SNSインフルエンサー風に視聴者に語りかける。15-30秒程度（ねえ、みんな、あなた、など）"
                   rows={4}
                   className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none"
                 />
-                {selectedSlide.narration?.trim() && (
-                  <p className="text-xs text-neutral-500 mt-1">
-                    約{estimateNarrationSeconds(selectedSlide.narration)}秒
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleCopyForLibrary}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-100 hover:bg-neutral-200 rounded-lg text-sm font-medium"
-                >
-                <Copy className="w-4 h-4" />
-                プロンプト用にコピー
-                </button>
-                <Link
-                  href="/library/manage"
-                  className="inline-flex items-center gap-2 px-4 py-2 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 rounded-lg text-sm font-medium text-neutral-700 transition-colors"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  プロンプトを生成
-                </Link>
               </div>
             </div>
           ) : (

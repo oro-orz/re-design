@@ -2,34 +2,21 @@
 
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { OutputTone } from "@/types/swipe-lp-v3";
 import { StepSectionHeader } from "./StepSectionHeader";
 
 export interface Step3FormValues {
-  user_supplement: string;
   emphasis_points: string;
-  output_tone: OutputTone | "";
   slide_count: number | null;
 }
 
 interface Step3SupplementProps {
-  initialSupplement: string;
   initialEmphasisPoints: string;
-  initialOutputTone: string | null;
   initialSlideCount: number | null;
   onNext: (values: Step3FormValues) => void;
   onBack: () => void;
   /** スライド構成生成中（次へ押下後） */
   isSubmitting?: boolean;
 }
-
-const TONE_OPTIONS: { value: OutputTone | ""; label: string }[] = [
-  { value: "", label: "指定しない" },
-  { value: "neutral", label: "中立的・バランスの取れた" },
-  { value: "casual", label: "カジュアル・親しみやすい" },
-  { value: "professional", label: "プロフェッショナル・信頼感" },
-  { value: "playful", label: "遊び心・軽やか" },
-];
 
 const SLIDE_COUNT_OPTIONS: { value: number | null; label: string }[] = [
   { value: null, label: "指定しない（6〜8枚で提案）" },
@@ -44,26 +31,18 @@ const labelBase =
   "block text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5";
 
 export function Step3Supplement({
-  initialSupplement,
   initialEmphasisPoints,
-  initialOutputTone,
   initialSlideCount,
   onNext,
   onBack,
   isSubmitting = false,
 }: Step3SupplementProps) {
-  const [supplement, setSupplement] = useState(initialSupplement);
   const [emphasisPoints, setEmphasisPoints] = useState(initialEmphasisPoints);
-  const [outputTone, setOutputTone] = useState<OutputTone | "">(
-    (initialOutputTone as OutputTone) || ""
-  );
   const [slideCount, setSlideCount] = useState<number | null>(initialSlideCount);
 
   const handleSubmit = () => {
     onNext({
-      user_supplement: supplement,
       emphasis_points: emphasisPoints,
-      output_tone: outputTone || "",
       slide_count: slideCount,
     });
   };
@@ -73,7 +52,7 @@ export function Step3Supplement({
       <StepSectionHeader
         step={3}
         title="スライドテキストの設定"
-        subtitle="トーン・強調点・枚数を指定できます。任意項目は空欄でOKです"
+        subtitle="強調点・枚数を指定できます"
       />
 
       <div className="rounded-lg border border-neutral-200 bg-white overflow-hidden">
@@ -95,52 +74,22 @@ export function Step3Supplement({
             />
           </label>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <label className="block">
-              <span className={labelBase}>テキストのトーン</span>
-              <select
-                value={outputTone}
-                onChange={(e) => setOutputTone((e.target.value || "") as OutputTone | "")}
-                className={`${inputBase} bg-white`}
-                disabled={isSubmitting}
-              >
-                {TONE_OPTIONS.map((opt) => (
-                  <option key={opt.value || "none"} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className={labelBase}>スライド枚数</span>
-              <select
-                value={slideCount ?? ""}
-                onChange={(e) =>
-                  setSlideCount(e.target.value === "" ? null : Number(e.target.value))
-                }
-                className={`${inputBase} bg-white`}
-                disabled={isSubmitting}
-              >
-                {SLIDE_COUNT_OPTIONS.map((opt) => (
-                  <option key={opt.value ?? "any"} value={opt.value ?? ""}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
           <label className="block">
-            <span className={labelBase}>補足情報（任意）</span>
-            <textarea
-              value={supplement}
-              onChange={(e) => setSupplement(e.target.value)}
-              rows={2}
-              placeholder="ターゲット層、競合との差別化など..."
-              className={`${inputBase} resize-none`}
+            <span className={labelBase}>スライド枚数</span>
+            <select
+              value={slideCount ?? ""}
+              onChange={(e) =>
+                setSlideCount(e.target.value === "" ? null : Number(e.target.value))
+              }
+              className={`${inputBase} bg-white`}
               disabled={isSubmitting}
-            />
+            >
+              {SLIDE_COUNT_OPTIONS.map((opt) => (
+                <option key={opt.value ?? "any"} value={opt.value ?? ""}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
       </div>
@@ -166,7 +115,7 @@ export function Step3Supplement({
               生成中…
             </>
           ) : (
-            "次へ：スライド構成を提案"
+            "次へ：スライドテキストを作成"
           )}
         </button>
       </div>

@@ -183,6 +183,7 @@ export function LibraryManageView() {
   const [copied, setCopied] = useState(false);
   const [bulkPasteStatus, setBulkPasteStatus] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const generatedPromptBlockRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"created_at" | "name" | "category">("created_at");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -192,6 +193,13 @@ export function LibraryManageView() {
   const [editingCategory, setEditingCategory] = useState("");
   const [editingSubcategory, setEditingSubcategory] = useState("");
   const router = useRouter();
+
+  // プロンプト生成完了時に結果エリアへスクロール
+  useEffect(() => {
+    if (generatedPrompt && showGenerateModal && generatedPromptBlockRef.current) {
+      generatedPromptBlockRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [generatedPrompt, showGenerateModal]);
 
   useEffect(() => {
     if (selectedTemplate) {
@@ -943,7 +951,7 @@ export function LibraryManageView() {
                   role="dialog"
                 >
                   <div
-                    className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+                    className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] min-h-[70vh] overflow-hidden shadow-2xl flex flex-col"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between px-6 py-5 border-b border-neutral-200 shrink-0">
@@ -961,19 +969,28 @@ export function LibraryManageView() {
                       </button>
                     </div>
                     <div className="p-6 sm:p-8 overflow-y-auto flex-1 space-y-5">
-                      <button
-                        type="button"
-                        onClick={handleBulkPaste}
-                        disabled={generatingPrompt}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-neutral-200 rounded-xl text-sm font-medium text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
-                      >
-                        <ClipboardPaste className="w-4 h-4" />
-                        一括貼り付け（SwipeLPからコピーした内容を入力）
-                      </button>
-                      {bulkPasteStatus && (
-                        <p className={`text-sm ${bulkPasteStatus.includes("失敗") || bulkPasteStatus.includes("空") ? "text-amber-600" : "text-green-600"}`}>
-                          {bulkPasteStatus}
-                        </p>
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                          <p className="text-sm text-red-800">{error}</p>
+                        </div>
+                      )}
+                      {!generatedPrompt && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleBulkPaste}
+                            disabled={generatingPrompt}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-neutral-200 rounded-xl text-sm font-medium text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
+                          >
+                            <ClipboardPaste className="w-4 h-4" />
+                            一括貼り付け（SwipeLPからコピーした内容を入力）
+                          </button>
+                          {bulkPasteStatus && (
+                            <p className={`text-sm ${bulkPasteStatus.includes("失敗") || bulkPasteStatus.includes("空") ? "text-amber-600" : "text-green-600"}`}>
+                              {bulkPasteStatus}
+                            </p>
+                          )}
+                        </>
                       )}
                       <div>
                         <label className="block text-sm font-medium text-neutral-700 mb-2">メインコピー *</label>
@@ -1104,7 +1121,7 @@ export function LibraryManageView() {
                       <button
                         type="button"
                         onClick={handleGeneratePrompt}
-                        disabled={generatingPrompt || !promptGenMessage.trim()}
+                        disabled={generatingPrompt || (!overlayMode && !promptGenMessage.trim())}
                         className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-neutral-900 text-white text-sm font-medium rounded-xl hover:bg-neutral-800 disabled:opacity-50 transition-colors"
                       >
                         {generatingPrompt ? (
@@ -1120,16 +1137,22 @@ export function LibraryManageView() {
                         )}
                       </button>
                       {generatedPrompt && (
-                        <div className="pt-5 border-t border-neutral-200">
+                        <div
+                          ref={generatedPromptBlockRef}
+                          className="pt-5 mt-2 mb-2 border-2 border-green-200 bg-green-50/60 rounded-xl px-4 py-4"
+                        >
                           <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-medium text-neutral-700">生成されたプロンプト</span>
+                            <span className="text-sm font-semibold text-green-800 flex items-center gap-2">
+                              <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white text-xs">✓</span>
+                              生成されたプロンプト
+                            </span>
                             <button
                               type="button"
                               onClick={() => handleCopyPrompt(generatedPrompt)}
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 text-sm rounded-lg transition-colors ${
                                 copied
-                                  ? "text-green-600 bg-green-50"
-                                  : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+                                  ? "text-green-600 bg-green-100"
+                                  : "text-neutral-700 hover:text-neutral-900 hover:bg-white/80"
                               }`}
                             >
                               {copied ? (
@@ -1145,7 +1168,7 @@ export function LibraryManageView() {
                               )}
                             </button>
                           </div>
-                          <pre className="text-sm text-neutral-800 whitespace-pre-wrap break-words bg-neutral-50 rounded-xl p-4 max-h-64 overflow-y-auto font-sans border border-neutral-200">
+                          <pre className="text-sm text-neutral-800 whitespace-pre-wrap break-words bg-white rounded-xl p-4 max-h-56 overflow-y-auto font-sans border border-green-200 shadow-sm">
                             {generatedPrompt}
                           </pre>
                         </div>

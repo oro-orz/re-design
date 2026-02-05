@@ -549,12 +549,15 @@ function CharacterToolsContent() {
           <div className="mx-auto max-w-md p-6 space-y-6">
             {mode === "character-scene" && (
               <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                <label className="block text-sm font-semibold text-neutral-800 mb-2">シーンの説明</label>
+                <label className="block text-sm font-semibold text-neutral-800 mb-1">シーンの説明</label>
+                <p className="text-xs text-neutral-500 mb-2">
+                  入力の参考：どこにいるか・何をしているか・どんなポーズ・構図か・画風・トーン
+                </p>
                 <textarea
                   name="prompt"
                   value={prompt}
                   onChange={(e) => { setPrompt(e.target.value); setError(null); }}
-                  placeholder="例: 同じキャラクターがカフェでコーヒーを飲んでいる、漫画調"
+                  placeholder="例：模試の結果が悪く、机でため息をつきながら落ち込んでいる様子。室内は暗めで、窓から少しだけ光が差し込んでいる。どんよりした雰囲気。"
                   rows={4}
                   className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-400"
                 />

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { runSlideCopyEnricher } from "@/lib/swipe-lp/gaudi/copy/slide-copy-enricher";
 import { runMarketingAnalysis } from "@/lib/swipe-lp/gaudi/marketing/analyzer";
 import {
   generateSlideStructureForV3,
@@ -175,9 +176,7 @@ export async function updateUserSupplement(
 
 /** Step 3 で設定するスライドテキスト設定の型 */
 export interface Step3Settings {
-  user_supplement: string;
   emphasis_points: string;
-  output_tone: string | null;
   slide_count: number | null;
 }
 
@@ -197,9 +196,7 @@ export async function updateStep3Settings(
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
     .update({
-      user_supplement: settings.user_supplement ?? "",
       emphasis_points: settings.emphasis_points || null,
-      output_tone: settings.output_tone || null,
       slide_count: settings.slide_count ?? null,
       status: "supplement_input",
     })
@@ -211,7 +208,7 @@ export async function updateStep3Settings(
 }
 
 /**
- * スライド構成を提案（AI生成）
+ * スライドテキストを作成（AI生成）
  */
 export async function proposeSlidesForV3(
   projectId: string
@@ -224,7 +221,7 @@ export async function proposeSlidesForV3(
 
   const { data: project, error: fetchError } = await supabase
     .from("swipe_lp_v3_projects")
-    .select("marketing_analysis, user_supplement, emphasis_points, output_tone, slide_count")
+    .select("marketing_analysis, emphasis_points, slide_count")
     .eq("id", projectId)
     .eq("user_id", user.id)
     .single();
@@ -232,18 +229,27 @@ export async function proposeSlidesForV3(
   if (fetchError) return { error: fetchError.message || "プロジェクトの取得に失敗しました" };
   if (!project?.marketing_analysis) return { error: "分析結果がありません" };
 
+  const analysis = project.marketing_analysis as Parameters<
+    typeof generateSlideStructureForV3
+  >[0];
+
+  const baseOptions = {
+    emphasisPoints: project.emphasis_points ?? undefined,
+    slideCount: project.slide_count ?? undefined,
+  };
+
   try {
-    const slides = await generateSlideStructureForV3(
-      project.marketing_analysis as Parameters<
-        typeof generateSlideStructureForV3
-      >[0],
-      {
-        userSupplement: project.user_supplement ?? undefined,
-        emphasisPoints: project.emphasis_points ?? undefined,
-        outputTone: project.output_tone ?? undefined,
-        slideCount: project.slide_count ?? undefined,
-      }
-    );
+    let slideReadyCopy: Awaited<ReturnType<typeof runSlideCopyEnricher>> | null = null;
+    try {
+      slideReadyCopy = await runSlideCopyEnricher(analysis);
+    } catch (enricherErr) {
+      console.warn("[proposeSlidesForV3] CopyEnricher failed, continuing without:", enricherErr);
+    }
+
+    const slides = await generateSlideStructureForV3(analysis, {
+      ...baseOptions,
+      slideReadyCopy: slideReadyCopy ?? undefined,
+    });
 
     await supabase
       .from("swipe_lp_v3_projects")

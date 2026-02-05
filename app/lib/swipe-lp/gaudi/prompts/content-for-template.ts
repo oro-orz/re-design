@@ -211,7 +211,7 @@ ${target.includes('男性') || target.includes('ビジネスマン') || target.i
     ],
     response_format: { type: "json_object" },
     temperature: 0.7,
-    max_tokens: 2000, // 詳細な記述のためトークン増量
+    max_completion_tokens: 2000, // 詳細な記述のためトークン増量
   });
 
   const text = response.choices[0]?.message?.content;

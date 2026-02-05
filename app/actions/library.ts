@@ -424,6 +424,91 @@ export async function regeneratePromptTemplate(
   }
 }
 
+/** 一括再生成の1件あたりの間隔（ms） */
+const BULK_REGENERATE_DELAY_MS = 1500;
+
+/**
+ * baseプロンプトを一括再生成（参照画像からAIで再解析）
+ * 各件の間に delay を入れてレート制限を避ける
+ */
+export async function regeneratePromptTemplatesBulk(
+  ids: string[]
+): Promise<{
+  successCount?: number;
+  failCount?: number;
+  results?: { id: string; error?: string }[];
+  error?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "認証が必要です" };
+  if (!ids.length) return { successCount: 0, failCount: 0, results: [] };
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const results: { id: string; error?: string }[] = [];
+  let successCount = 0;
+  let failCount = 0;
+
+  for (let i = 0; i < ids.length; i++) {
+    const id = ids[i];
+    if (i > 0) await sleep(BULK_REGENERATE_DELAY_MS);
+
+    const { data: existing } = await supabase
+      .from("prompt_templates")
+      .select("sample_image_url, image_urls")
+      .eq("id", id)
+      .single();
+
+    if (!existing) {
+      results.push({ id, error: "テンプレートが見つかりません" });
+      failCount++;
+      continue;
+    }
+
+    const imageUrl =
+      (existing as { sample_image_url?: string; image_urls?: string[] }).sample_image_url ||
+      (existing as { sample_image_url?: string; image_urls?: string[] }).image_urls?.[0];
+
+    if (!imageUrl) {
+      results.push({ id, error: "参照画像がありません" });
+      failCount++;
+      continue;
+    }
+
+    try {
+      const generated = await analyzeImageForStructured(imageUrl);
+      const name = `${generated.category} - ${generated.memo || "テンプレート"}`.slice(0, 100);
+
+      const { error } = await supabase
+        .from("prompt_templates")
+        .update({
+          name,
+          category: generated.category || null,
+          memo: generated.memo || null,
+          style_json: generated.style_json,
+          slots_json: generated.slots_json,
+        })
+        .eq("id", id);
+
+      if (error) {
+        results.push({ id, error: error.message });
+        failCount++;
+      } else {
+        results.push({ id });
+        successCount++;
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "プロンプトの再生成に失敗しました";
+      results.push({ id, error: msg });
+      failCount++;
+    }
+  }
+
+  return { successCount, failCount, results };
+}
+
 /**
  * 削除
  */

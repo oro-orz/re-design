@@ -4,7 +4,7 @@
 
 import { openai, OPENAI_CHAT_MODEL } from "@/lib/openai";
 import type { MarketingAnalysis, Slide } from "@/types/swipe-lp";
-import type { SwipeLPv3Slide } from "@/types/swipe-lp-v3";
+import type { SlideReadyCopy, SwipeLPv3Slide } from "@/types/swipe-lp-v3";
 
 function uuid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -16,10 +16,10 @@ function uuid() {
 
 /** スライド構成生成時のオプション（Step 3 でユーザーが指定） */
 export interface SlideStructureOptions {
-  userSupplement?: string | null;
   emphasisPoints?: string | null;
-  outputTone?: string | null;
   slideCount?: number | null;
+  /** 2段階パイプライン: Stage1 で生成された具体的なコピー要素（ある場合は優先使用） */
+  slideReadyCopy?: SlideReadyCopy | null;
 }
 
 /**
@@ -30,21 +30,18 @@ export async function generateSlideStructure(
   options?: SlideStructureOptions | string | null
 ): Promise<Slide[]> {
   const opts: SlideStructureOptions =
-    typeof options === "string" || options == null
-      ? { userSupplement: options ?? undefined }
-      : options;
+    typeof options === "string" || options == null ? {} : options;
 
-  const userSupplement = opts.userSupplement;
   const emphasisPoints = opts.emphasisPoints;
-  const outputTone = opts.outputTone;
   const slideCount = opts.slideCount;
+  const slideReadyCopy = opts.slideReadyCopy;
 
   const slideCountInstruction =
     slideCount != null && slideCount >= 6 && slideCount <= 8
       ? `**必ず ${slideCount} 枚**のスワイプLP構成を設計してください。`
       : "6-8枚のスワイプLP構成を設計してください。";
 
-  console.log("[Gaudí Slides] Generating structure from analysis...", { slideCount, outputTone: !!outputTone, emphasisPoints: !!emphasisPoints });
+  console.log("[Gaudí Slides] Generating structure from analysis...", { slideCount, emphasisPoints: !!emphasisPoints, hasSlideReadyCopy: !!slideReadyCopy });
 
   const response = await openai.chat.completions.create({
     model: OPENAI_CHAT_MODEL,
@@ -52,6 +49,8 @@ export async function generateSlideStructure(
       {
         role: "system",
         content: `マーケティング分析に基づき、${slideCountInstruction}
+
+**前提**: 出力はSNS広告（インスタ・TikTok・X）向け。スクロールを止める、エッジの効いたコピーを目指す。抽象的・ありがちな表現は禁止。
 
 ## ストーリーテリングの原則
 
@@ -123,9 +122,28 @@ ${analysis.painPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 - **Desire（欲求）**: ${analysis.framework.aidma.desire}
 - **Memory（記憶）**: ${analysis.framework.aidma.memory}
 - **Action（行動）**: ${analysis.framework.aidma.action}
-${userSupplement ? `\n## ユーザーからの追加情報\n${userSupplement}\n` : ""}
+${slideReadyCopy ? `
+## スライド用の具体的なコピー要素（必ず優先して使用すること）
+
+以下は事前に生成された、スワイプLPでそのまま使える具体的なフレーズです。
+**message / subMessage / additionalText には、これらのフレーズを選び・組み合わせ・補足して使用してください。** ゼロから書くのではなく、これらの具体性を活かしてスライドを組み立てること。
+
+- **共感・悩み用**: ${slideReadyCopy.painPhrases.join(" / ")}
+- **リスク可視化用**: ${slideReadyCopy.riskPhrases.join(" / ")}
+- **解決策見出し**: ${slideReadyCopy.solutionHeadline}
+- **解決策キャッチ**: ${slideReadyCopy.solutionCatch}
+- **メリット**: ${slideReadyCopy.benefitBullets.join(" / ")}
+- **信頼・実績**: ${slideReadyCopy.trustPoints.join(" / ")}
+- **申込みの流れ**: ${slideReadyCopy.flowSteps.join(" → ")}
+- **口コミ例**: ${slideReadyCopy.testimonialTemplates.join(" / ")}
+- **CTA見出し**: ${slideReadyCopy.ctaVariants.headline ?? ""}
+- **CTAボタン**: ${slideReadyCopy.ctaVariants.buttonText ?? ""}
+- **CTA補足**: ${slideReadyCopy.ctaVariants.supplement ?? ""}
+` : ""}
 ${emphasisPoints ? `\n## 特に強調したい点（必ずスライドに反映すること）\n${emphasisPoints}\n` : ""}
-${outputTone ? `\n## テキストのトーン（全体で統一すること）\n- **${outputTone}**: ${outputTone === "neutral" ? "中立的・バランスの取れた表現" : outputTone === "casual" ? "カジュアル・親しみやすい・話し言葉" : outputTone === "professional" ? "プロフェッショナル・信頼感・丁寧" : outputTone === "playful" ? "遊び心・軽やか・ポジティブ" : outputTone}\n` : ""}
+
+## 禁止パターン（絶対に使わないこと）
+「〜でお悩みではありませんか」「お気軽に」「ぜひ」「多くのお客様に」「充実した」「高品質な」「丁寧な」「あなたの理想の〜を」「〜を実現」。当たり障りのない一般論はNG。
 
 ## 各スライドの設計要素（すべて生成すること）
 
@@ -139,24 +157,25 @@ ${outputTone ? `\n## テキストのトーン（全体で統一すること）\n
 - **storyNote**: 前スライドとの接続・ストーリー上の役割（1文）
 - **keyTakeaway**: このスライドで伝えたい1行サマリー
 - **messageAlternatives**: 代替キャッチコピー案（最大2要素、A/Bテスト用）
-- **narration**: ナレーション原稿（50-100文字、話し言葉。messageの繰り返しではなく補足・感情の深掘り。15-30秒読み上げ想定）
+- **narration**: ナレーション原稿（50-100文字・15-30秒想定）。**SNSインフルエンサー風に、視聴者に直接語りかける口調で書くこと**。一人称は「私」または省略し、「ねえ」「みんな」「あなた」など相手を意識した呼びかけを入れる。messageの棒読みではなく、友達に話すように親しみやすく・本音っぽく。例:「ねえ、これ知ってる？ 私も昔そうだったんだけど」「みんなにも伝えたくて」「あなたなら分かってくれると思う」
 - **ctaButtonText**: purpose が クロージング・CTA の場合のみ。ボタン文言。例: LINEで無料相談
 - **ctaUrgency**: purpose が クロージング・CTA の場合のみ。緊急性・限定感。例: 24時間受付 / 今だけ
 
 ## 重要な指針
 
-1. **テキストは多めに**: デザインテンプレートの複数テキストエリア（見出し・サブ・チェックリスト・キャプション等）を埋めるため、message・subMessage・additionalText を十分に生成する。1-2行では足りない。
-2. **メッセージは具体的に**: 抽象的な言葉を避け、ターゲットが「自分のこと」と思える表現にする
-3. **ストーリーの流れ**: 痛み → 解決策 → 理想の未来 → 行動 という自然な流れを作る
-4. **感情の変化**: ネガティブ（不安・焦り）→ ポジティブ（期待・安心）→ アクション（決断）
-5. **CTA は明確に**: 「今すぐ」「無料で」「簡単に」など、行動のハードルを下げる言葉を使う
+1. **SNS広告・エッジ**: フィードで拇指が止まる強さ。当たり障りのない表現より、本音寄り・挑発的でOK（誇大・虚偽は除く）
+2. **テキストは多めに**: デザインテンプレートの複数テキストエリアを埋めるため、message・subMessage・additionalText を十分に生成する
+3. **メッセージは具体的に**: 抽象的な言葉を禁止。数字・シーン・ターゲットの心の声のいずれかを必ず含める
+4. **ストーリーの流れ**: 痛み → 解決策 → 理想の未来 → 行動 という自然な流れを作る
+5. **感情の変化**: ネガティブ（不安・焦り）→ ポジティブ（期待・安心）→ アクション（決断）
+6. **CTA は明確に**: 「今すぐ」「無料で」「簡単に」など、行動のハードルを下げる言葉を使う
+7. **ナレーションは広告・インフルエンサー寄りに**: 視聴者に向かって語りかける。SNSの動画で「ねえ、みんな」「あなたに伝えたい」のように話しかけるトーン。堅い説明調・アナウンス調は避け、親しみやすく本音っぽく。
 
-### ポジショニング・ベネフィット・トーン（必須）
+### ポジショニング・ベネフィット（必須）
 
-6. **ポジショニングに合わせた共感**: 上記「ポジショニング・訴求軸」を必ず参照する。業界の「あるある」痛みだけでなく、**このサービスの立ち位置に合った**課題・共感で書く。例: 即時性が強みのサービスなら「時間が足りない」より「今すぐ誰かと話したい」に寄せる。
-7. **ベネフィットを具体化**: 共感・課題提起だけで終わらせない。**このサービスを使うとどう変わるか**を必ず含める（例: 5分で相手が見つかる、隙間時間で完結、今夜会える）。数字・シーンがあるとよい。
-8. **トーン＆マナーを合わせる**: サービスの性質（気軽さ / 真剣さ / 遊び心 / ワクワク感）に合わせた文体にする。転職サイトやビジネススクールのような重いトーンにならないよう、自社の強み・ポジショニングに合った表現にする。
-9. **欲求の時間軸を合わせる**: 「欲求の時間軸」が**短期的**なら「人生のチャンスを逃したくない」のような長期的な不安を主軸にしない。「今日誰かと話したい」「今週会いたい」など短期的な欲求にフォーカスする。逆に**長期的**なら将来の安心・人生の選択を前面に出す。
+8. **ポジショニングに合わせた共感**: 上記「ポジショニング・訴求軸」を必ず参照する。業界の「あるある」痛みだけでなく、**このサービスの立ち位置に合った**課題・共感で書く。例: 即時性が強みのサービスなら「時間が足りない」より「今すぐ誰かと話したい」に寄せる。
+9. **ベネフィットを具体化**: 共感・課題提起だけで終わらせない。**このサービスを使うとどう変わるか**を必ず含める（例: 5分で相手が見つかる、隙間時間で完結、今夜会える）。数字・シーンがあるとよい。
+10. **欲求の時間軸を合わせる**: 「欲求の時間軸」が**短期的**なら「人生のチャンスを逃したくない」のような長期的な不安を主軸にしない。「今日誰かと話したい」「今週会いたい」など短期的な欲求にフォーカスする。逆に**長期的**なら将来の安心・人生の選択を前面に出す。
 
 ## 出力形式（JSON）
 
@@ -173,7 +192,7 @@ ${outputTone ? `\n## テキストのトーン（全体で統一すること）\n
       "storyNote": "ファーストビュー。理想の姿で引き込み",
       "keyTakeaway": "退職後の穏やかな生活をイメージさせる",
       "messageAlternatives": ["代替案1"],
-      "narration": "毎朝あの人の顔を思い出して憂うつになる。そんな日々、もう終わりにしませんか？",
+      "narration": "ねえ、毎朝あの人のこと考えちゃって憂うつになるの、私だけ？ そんな日々、もう終わりにしない？",
       "ctaButtonText": null,
       "ctaUrgency": null
     }
@@ -186,7 +205,7 @@ ${outputTone ? `\n## テキストのトーン（全体で統一すること）\n
       },
     ],
     response_format: { type: "json_object" },
-    temperature: 0.8,
+    temperature: 0.5,
   });
 
   const rawContent = response.choices[0]?.message?.content;
@@ -220,7 +239,7 @@ ${outputTone ? `\n## テキストのトーン（全体で統一すること）\n
   } catch (e) {
     console.error("[Gaudí Slides] Invalid JSON:", rawContent.slice(0, 200));
     throw new Error(
-      "AIの応答形式が不正でした。もう一度「スライド構成を提案」を押して再試行してください。"
+      "AIの応答形式が不正でした。もう一度「スライドテキストを作成」を押して再試行してください。"
     );
   }
 

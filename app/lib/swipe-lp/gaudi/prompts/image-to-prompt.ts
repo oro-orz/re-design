@@ -364,7 +364,7 @@ export async function generateTemplateFromOneImage(
   const response = await openai.chat.completions.create({
     model: OPENAI_CHAT_MODEL,
     messages: [{ role: "user", content }],
-    max_tokens: 3000,
+    max_completion_tokens: 3000,
     temperature: 0.7,
     response_format: { type: "json_object" },
   });
@@ -414,7 +414,7 @@ export async function analyzeImageForStructured(
   const response = await openai.chat.completions.create({
     model: OPENAI_CHAT_MODEL,
     messages: [{ role: "user", content }],
-    max_tokens: 2500,
+    max_completion_tokens: 2500,
     temperature: 0.5,
     response_format: { type: "json_object" },
   });
