@@ -9,6 +9,7 @@ type WorkflowSectionProps = {
   imageSrc: string;
   imageAlt: string;
   cta?: { label: string; href: string; external?: boolean };
+  onImageClick?: () => void;
 };
 
 export function WorkflowSection({
@@ -19,6 +20,7 @@ export function WorkflowSection({
   imageSrc,
   imageAlt,
   cta,
+  onImageClick,
 }: WorkflowSectionProps) {
   return (
     <section
@@ -30,14 +32,18 @@ export function WorkflowSection({
       </h2>
       <p className="mb-4 text-sm text-neutral-500">{description}</p>
       {imageSrc ? (
-        <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200">
+        <button
+          type="button"
+          onClick={onImageClick}
+          className="mt-4 w-full overflow-hidden rounded-lg border border-neutral-200 text-left focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageSrc}
             alt={imageAlt}
             className="h-auto w-full object-contain"
           />
-        </div>
+        </button>
       ) : (
         <div className="mt-4 rounded-lg border border-dashed border-neutral-200 bg-neutral-50 py-8 text-center text-sm text-neutral-400">
           画像未配置

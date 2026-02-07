@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ImagePlus, UsersRound, LayoutList, MessageSquare, ExternalLink } from "lucide-react";
+import { Sparkles, ImagePlus, UsersRound, LayoutList, MessageSquare, ExternalLink, Menu, X } from "lucide-react";
 import { WorkflowSection } from "../components/workflow/WorkflowSection";
 
 // 画像は内容に合わせて正しいセクションに割り当て
@@ -107,72 +108,122 @@ const WORKFLOW_ITEMS = [
   },
 ];
 
+const NAV_LINKS = [
+  { href: "/", label: "プロンプト生成", icon: Sparkles },
+  { href: "/overlay-mode/new", label: "ベース生成", icon: ImagePlus },
+  { href: "/character-tools", label: "キャラ生成", icon: UsersRound },
+  { href: "/swipe-lp/", label: "スライド生成", icon: LayoutList },
+  { href: "/feedback", label: "フィードバック", icon: MessageSquare },
+  { href: "https://gemini.google.com/app", label: "NanoBanana", icon: ExternalLink, external: true },
+  { href: "https://chatgpt.com/", label: "DALL·E 3", icon: ExternalLink, external: true },
+];
+
 export default function WorkflowPage() {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [modalImage, setModalImage] = useState<string | null>(null);
+
+  const navLinksEl = (
+    <>
+      {NAV_LINKS.map(({ href, label, icon: Icon, external }) =>
+        external ? (
+          <a
+            key={href}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setMenuOpen(false)}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
+          >
+            <Icon className="w-4 h-4 shrink-0" />
+            {label}
+          </a>
+        ) : (
+          <Link
+            key={href}
+            href={href}
+            onClick={() => setMenuOpen(false)}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
+          >
+            <Icon className="w-4 h-4 shrink-0" />
+            {label}
+          </Link>
+        )
+      )}
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-neutral-50">
-      <header className="sticky top-0 z-10 flex min-h-[52px] items-center justify-between border-b border-neutral-200 bg-white px-4 py-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-neutral-900 leading-tight">Re:Design</h1>
-            <p className="text-[10px] text-neutral-500 leading-tight">ワークフロー</p>
-          </div>
+      <header className="sticky top-0 z-20 flex min-h-[52px] items-center justify-between gap-2 border-b border-neutral-200 bg-white px-4 py-2">
+        <div className="min-w-0 shrink-0">
+          <h1 className="text-sm font-bold text-neutral-900 leading-tight">Re:Design</h1>
+          <p className="text-[10px] text-neutral-500 leading-tight">ワークフロー</p>
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <Sparkles className="w-3 h-3 shrink-0" />
-            プロンプト生成
-          </Link>
-          <Link
-            href="/overlay-mode/new"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <ImagePlus className="w-3 h-3 shrink-0" />
-            ベース生成
-          </Link>
-          <Link
-            href="/character-tools"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <UsersRound className="w-3 h-3 shrink-0" />
-            キャラ生成
-          </Link>
-          <Link
-            href="/swipe-lp/"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <LayoutList className="w-3 h-3 shrink-0" />
-            スライド生成
-          </Link>
-          <Link
-            href="/feedback"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            <MessageSquare className="w-3 h-3 shrink-0" />
-            フィードバック
-          </Link>
-          <a
-            href="https://gemini.google.com/app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            NanoBanana
-            <ExternalLink className="w-3 h-3 shrink-0" />
-          </a>
-          <a
-            href="https://chatgpt.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
-          >
-            DALL·E 3
-            <ExternalLink className="w-3 h-3 shrink-0" />
-          </a>
-        </div>
+        {/* デスクトップ: 横並び */}
+        <nav className="hidden md:flex items-center gap-1.5 shrink-0 overflow-x-auto">
+          {NAV_LINKS.map(({ href, label, icon: Icon, external }) =>
+            external ? (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 shrink-0"
+              >
+                <Icon className="w-3 h-3 shrink-0" />
+                {label}
+              </a>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-white border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 shrink-0"
+              >
+                <Icon className="w-3 h-3 shrink-0" />
+                {label}
+              </Link>
+            )
+          )}
+        </nav>
+        {/* スマホ: ハンバーガーボタン */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors"
+          aria-label="メニューを開く"
+        >
+          <Menu className="w-6 h-6 text-neutral-700" />
+        </button>
       </header>
+
+      {/* スマホ用ドロワー */}
+      {menuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-50 bg-black/50"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`md:hidden fixed top-0 right-0 z-50 h-full w-[min(280px,85vw)] bg-white shadow-xl transition-transform duration-200 ${
+          menuOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-neutral-200">
+          <span className="text-sm font-bold text-neutral-900">メニュー</span>
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="p-2 rounded-lg hover:bg-neutral-100"
+            aria-label="メニューを閉じる"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <nav className="flex flex-col p-3 gap-1 overflow-y-auto">
+          {navLinksEl}
+        </nav>
+      </aside>
 
       <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-2 text-2xl font-bold text-neutral-900">
@@ -193,10 +244,28 @@ export default function WorkflowPage() {
               imageSrc={item.image}
               imageAlt={item.imageAlt}
               cta={item.cta}
+              onImageClick={item.image ? () => setModalImage(item.image) : undefined}
             />
           ))}
         </div>
       </main>
+
+      {/* 画像全画面モーダル */}
+      {modalImage && (
+        <button
+          type="button"
+          onClick={() => setModalImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 focus:outline-none"
+          aria-label="閉じる"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={modalImage}
+            alt=""
+            className="max-h-full max-w-full object-contain"
+          />
+        </button>
+      )}
     </div>
   );
 }
