@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Re:Design ワークフロー</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card: #fff;
+      --border: #e5e7eb;
+      --text: #111;
+      --text-muted: #6b7280;
+      --accent: #0f2f4a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Helvetica Neue", "Hiragino Kaku Gothic ProN", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+    .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    section h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    section p {
+      margin: 0 0 1rem 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .screenshot {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .screenshot-wrap { margin-top: 1rem; }
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Re:Design ワークフロー</h1>
+    <p class="subtitle">スライド生成からベース画像生成までの主な画面です。該当するスクリーンショットを各セクションに配置しています。</p>
+
+    <!-- Step 1-2: URL入力と分析 -->
+    <section id="step-url-analysis">
+      <h2>1. URL入力と分析（Step 1〜2）</h2>
+      <p>LP・競合サイトのURLを入力すると、AIがマーケティング分析（ビジネスタイプ・ターゲット・3C・AIDMAなど）を実行し、分析結果とインサイトを表示します。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-6a379538-a567-4203-8e8d-33795dea55f0.png" alt="URL入力と分析結果・3C・AIDMA" />
+      </div>
+    </section>
+
+    <!-- Step 3: 補足情報 -->
+    <section id="step-supplement">
+      <h2>2. 補足情報の入力（Step 3）</h2>
+      <p>強調したい点やスライド枚数を指定し、「次へ: スライドテキストを作成」でスライド構成の提案に進みます。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-db0a4ae8-fc6c-4990-9022-18fc88f4ec7f.png" alt="Step3 スライドテキストの設定" />
+      </div>
+    </section>
+
+    <!-- Step 4: スライド構成・編集 -->
+    <section id="step-slides">
+      <h2>3. スライド構成と編集（Step 4）</h2>
+      <p>AIが提案したスライド一覧をクリックして詳細を編集。デザインイメージ・メインコピー・サブコピー・追加テキスト・ナレーション原稿などを設定できます。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-841d78f6-d3f0-4a69-be36-af6626d9085f.png" alt="Step4 スライド構成と詳細編集" />
+      </div>
+    </section>
+
+    <!-- デザインでプロンプト生成モーダル -->
+    <section id="prompt-modal">
+      <h2>4. デザインでプロンプトを生成（モーダル）</h2>
+      <p>ライブラリからデザインを選び、メインコピー・サブコピー・追加テキストを入力。アスペクト比や生成モード（人物あり/なし・テキストあり/なし）を選んでプロンプトを生成します。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-3879e6fe-d8f8-4c91-a062-4c34a9d4a318.png" alt="このデザインでプロンプトを生成モーダル" />
+      </div>
+    </section>
+
+    <!-- 生成されたプロンプト -->
+    <section id="generated-prompt">
+      <h2>5. 生成されたプロンプト</h2>
+      <p>英語のデザインプロンプトが生成され、コピーボタンで画像AI（NanoBanana・DALL-E等）に貼り付けて使用します。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-6dcf5053-0eb1-4508-811d-cc87c6c5c824.png" alt="生成されたプロンプトとコピー" />
+      </div>
+    </section>
+
+    <!-- 広告プレビュー -->
+    <section id="ad-preview">
+      <h2>6. 広告プレビュー（生成結果イメージ）</h2>
+      <p>プロンプトを画像AIで実行した場合のイメージ。キャッチコピー・チェックリスト・人物ビジュアルが指定どおりに構成されます。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-fc9ec49d-c8fb-43e2-91dd-ed50a7c115bc.png" alt="生成された広告プレビュー" />
+      </div>
+    </section>
+
+    <!-- スタイル設定パネル -->
+    <section id="style-settings">
+      <h2>7. スタイル設定とテキストスロット</h2>
+      <p>テンプレートのスタイル設定（撮影・ライト・デザイン・レイアウト・タイポ・配色・装飾・ムード）とテキストスロットの説明。プレビューと連動しています。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-0ae627fa-0410-44a8-a5a9-a4b0eedfc12e.png" alt="スタイル設定パネルとプレビュー" />
+      </div>
+    </section>
+
+    <!-- ベース画像生成（テキスト削除） -->
+    <section id="base-text-remove">
+      <h2>8. ベース画像生成（テキスト削除）</h2>
+      <p>参考画像をアップロードし、「テキストを削除する」「装飾を残す」などでテキストなしのベース画像を生成。動画オーバーレイの土台に利用できます。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-e32615e8-68f9-46ae-9e06-2b25ce9dc5a7.png" alt="ベース画像生成・テキスト削除" />
+      </div>
+    </section>
+
+    <!-- ベース画像生成（人物変更） -->
+    <section id="base-person-change">
+      <h2>9. ベース画像生成（人物変更）</h2>
+      <p>「人物を変更する」でターゲット（例: 40代女性キャリア）を選択すると、同じ構図・装飾のまま人物だけ差し替えたベース画像を生成できます。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-ba3e8570-16de-4ff5-b3eb-72352c09d714.png" alt="ベース画像生成・人物変更" />
+      </div>
+    </section>
+
+    <!-- キャラ生成：マルチポーズ -->
+    <section id="char-multipose">
+      <h2>10. キャラ生成：マルチポーズ</h2>
+      <p>キャラ参照画像を1枚アップロードし、生成枚数（4枚・6枚・9枚・12枚）を選ぶと、同じキャラの様々なポーズ・表情をまとめて生成できます。プロンプト不要で一括ダウンロード（ZIP）可能です。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-dd8f6ee6-c190-4ef7-9b78-a3dce5635cda.png" alt="キャラ生成・マルチポーズ" />
+      </div>
+    </section>
+
+    <!-- キャラ生成：キャラ別シーン -->
+    <section id="char-scene">
+      <h2>11. キャラ生成：キャラ別シーン</h2>
+      <p>キャラ参照画像と「シーンの説明」（どこにいるか・何をしているか・ポーズ・雰囲気など）を入力すると、そのキャラで別シーンの画像を生成できます。窓際で勉強している様子など、テキストで指定するだけです。</p>
+      <div class="screenshot-wrap">
+        <img class="screenshot" src="../assets/image-33ea5771-9df3-4726-b553-5ccbaa549fec.png" alt="キャラ生成・キャラ別シーン" />
+      </div>
+    </section>
+
+    <footer>
+      Re:Design ワークフロー — 画像は assets フォルダに配置してください。
+    </footer>
+  </div>
+</body>
+</html>
