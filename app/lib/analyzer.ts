@@ -95,9 +95,26 @@ export function extractImages(html: string, baseUrl: string): ImageData[] {
 
 const MAX_PARAGRAPHS = 10;
 const MAX_LIST_ITEMS = 20;
+/** 画像中心LP用: alt テキストは最大件数と合計文字数で制限 */
+const MAX_ALT_ITEMS = 30;
+const MAX_ALT_TOTAL_CHARS = 8000;
 
 export function extractTextFromHtml(html: string): string {
   const $ = cheerio.load(html);
+
+  const parts: string[] = [];
+
+  const title = $("title").first().text().trim();
+  if (title) {
+    parts.push("【タイトル】", title);
+  }
+
+  const metaDesc =
+    $('meta[name="description"]').attr("content")?.trim() ||
+    $('meta[property="og:description"]').attr("content")?.trim();
+  if (metaDesc) {
+    parts.push("【メタ説明】", metaDesc);
+  }
 
   const headings = $("h1, h2, h3")
     .map((_, el) => $(el).text().trim())
@@ -114,7 +131,6 @@ export function extractTextFromHtml(html: string): string {
     .filter(Boolean)
     .slice(0, MAX_LIST_ITEMS);
 
-  const parts: string[] = [];
   if (headings.length) {
     parts.push("【見出し】", headings.join("\n"));
   }
@@ -124,5 +140,22 @@ export function extractTextFromHtml(html: string): string {
   if (listItems.length) {
     parts.push("【リスト】", listItems.join("\n"));
   }
+
+  const altTexts: string[] = [];
+  let altTotalChars = 0;
+  $("img").each((_, el) => {
+    if (altTexts.length >= MAX_ALT_ITEMS || altTotalChars >= MAX_ALT_TOTAL_CHARS) return false;
+    const alt = $(el).attr("alt")?.trim();
+    if (!alt) return;
+    const take = Math.min(alt.length, MAX_ALT_TOTAL_CHARS - altTotalChars);
+    if (take > 0) {
+      altTexts.push(take < alt.length ? alt.slice(0, take) : alt);
+      altTotalChars += take;
+    }
+  });
+  if (altTexts.length) {
+    parts.push("【画像の説明】", altTexts.join("\n\n"));
+  }
+
   return parts.join("\n\n").trim();
 }

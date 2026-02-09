@@ -82,6 +82,56 @@ export async function analyzeUrlForV3(
 }
 
 /**
+ * 画像アップロードでマーケティング分析を実行し、同一プロジェクトを更新
+ */
+export async function analyzeImageForV3(
+  projectId: string,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "認証が必要です" };
+
+  const { data: project } = await supabase
+    .from("swipe_lp_v3_projects")
+    .select("id")
+    .eq("id", projectId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (!project) return { error: "プロジェクトが見つかりません" };
+
+  const file = formData.get("image");
+  if (!file || !(file instanceof Blob) || file.size === 0) {
+    return { error: "画像を選択してください" };
+  }
+
+  try {
+    const marketingAnalysis = await runMarketingAnalysis({
+      inputType: "image",
+      imageBlob: file,
+    });
+
+    await supabase
+      .from("swipe_lp_v3_projects")
+      .update({
+        marketing_analysis: marketingAnalysis,
+        status: "analysis_done",
+      })
+      .eq("id", projectId);
+
+    return {};
+  } catch (err) {
+    console.error("[analyzeImageForV3]", err);
+    return {
+      error: err instanceof Error ? err.message : "画像の分析に失敗しました",
+    };
+  }
+}
+
+/**
  * v3プロジェクト取得
  */
 export async function getV3Project(
@@ -228,6 +278,14 @@ export async function proposeSlidesForV3(
 
   if (fetchError) return { error: fetchError.message || "プロジェクトの取得に失敗しました" };
   if (!project?.marketing_analysis) return { error: "分析結果がありません" };
+
+  const rawAnalysis = project.marketing_analysis as { analysisUnavailable?: boolean };
+  if (rawAnalysis.analysisUnavailable) {
+    return {
+      error:
+        "URLから十分な分析ができていません。Step2で「画像で分析する」からスクリーンショットやLP画像をアップロードしてください。",
+    };
+  }
 
   const analysis = project.marketing_analysis as Parameters<
     typeof generateSlideStructureForV3

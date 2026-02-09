@@ -40,6 +40,10 @@ export interface MarketingAnalysis {
   painPoints: string[];
   solution: string;
   emotionalTrigger: string;
+  /** 分析不可の場合 true。unavailableReason に理由を格納 */
+  analysisUnavailable?: boolean;
+  /** 分析不可時の理由（テキスト不足・画像中心LPなど） */
+  unavailableReason?: string;
   /** サービスのポジショニング（業界内の立ち位置。例: 本気の婚活 vs 気軽な出会い・即時性） */
   positioning?: string;
   /** 訴求の軸（何を打ち出すか。例: タイパ・即効性・手軽さ・ワクワク感） */

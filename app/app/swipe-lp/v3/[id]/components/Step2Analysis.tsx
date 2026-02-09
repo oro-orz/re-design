@@ -1,17 +1,19 @@
 "use client";
 
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ImageUp } from "lucide-react";
 import type { MarketingAnalysis } from "@/types/swipe-lp";
 import { StepSectionHeader } from "./StepSectionHeader";
 
 interface Step2Props {
   marketingAnalysis: MarketingAnalysis;
   onNext: () => void;
+  onImageAnalyzeClick?: () => void;
 }
 
 interface Step2LeftProps {
   inputUrl: string;
   marketingAnalysis: MarketingAnalysis;
+  onImageAnalyzeClick?: () => void;
 }
 
 const labelClass =
@@ -76,7 +78,13 @@ export function FrameworkCard({
 }
 
 /** 左: Step1 URL + 分析結果（テーブル形式） */
-export function Step2AnalysisLeft({ inputUrl, marketingAnalysis }: Step2LeftProps) {
+export function Step2AnalysisLeft({
+  inputUrl,
+  marketingAnalysis,
+  onImageAnalyzeClick,
+}: Step2LeftProps) {
+  const unavailable = marketingAnalysis.analysisUnavailable;
+
   const analysisItems = [
     { label: "ビジネスタイプ", value: marketingAnalysis.businessType },
     { label: "ターゲット", value: marketingAnalysis.target },
@@ -98,22 +106,49 @@ export function Step2AnalysisLeft({ inputUrl, marketingAnalysis }: Step2LeftProp
 
       <div className="space-y-3">
         <StepSectionHeader step={2} title="リサーチ" />
-        <FrameworkCard
-          title="分析結果"
-          badge="インサイト"
-          items={analysisItems}
-          headerLink={{
-            href: USER_INSIGHT_SEARCH_URL,
-            label: "ユーザーインサイトとは？",
-          }}
-        />
+        {unavailable ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p className="text-sm font-medium text-amber-900">分析できませんでした</p>
+            <p className="mt-2 text-sm text-amber-800 whitespace-pre-line">
+              {marketingAnalysis.unavailableReason}
+            </p>
+            <p className="mt-3 text-xs text-amber-700">
+              スクリーンショットやLPの画像をアップロードすると分析できます。
+            </p>
+            {onImageAnalyzeClick && (
+              <button
+                type="button"
+                onClick={onImageAnalyzeClick}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+              >
+                <ImageUp className="h-4 w-4" />
+                画像で分析する
+              </button>
+            )}
+          </div>
+        ) : (
+          <FrameworkCard
+            title="分析結果"
+            badge="インサイト"
+            items={analysisItems}
+            headerLink={{
+              href: USER_INSIGHT_SEARCH_URL,
+              label: "ユーザーインサイトとは？",
+            }}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 /** 右: 3C・AIDMA・次へボタン */
-export function Step2AnalysisRight({ marketingAnalysis, onNext }: Step2Props) {
+export function Step2AnalysisRight({
+  marketingAnalysis,
+  onNext,
+  onImageAnalyzeClick,
+}: Step2Props) {
+  const unavailable = marketingAnalysis.analysisUnavailable;
   const { framework } = marketingAnalysis;
 
   const threeCItems = [
@@ -132,33 +167,56 @@ export function Step2AnalysisRight({ marketingAnalysis, onNext }: Step2Props) {
 
   return (
     <div className="space-y-6">
-      <FrameworkCard
-        title="3C分析"
-        badge="顧客・競合・自社"
-        items={threeCItems}
-        headerLink={{
-          href: THREE_C_SEARCH_URL,
-          label: "3C分析とは？",
-        }}
-      />
+      {unavailable ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-900">分析できませんでした</p>
+          <p className="mt-2 text-sm text-amber-800 whitespace-pre-line">
+            {marketingAnalysis.unavailableReason}
+          </p>
+          {onImageAnalyzeClick && (
+            <button
+              type="button"
+              onClick={onImageAnalyzeClick}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+            >
+              <ImageUp className="h-4 w-4" />
+              画像で分析する
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <FrameworkCard
+            title="3C分析"
+            badge="顧客・競合・自社"
+            items={threeCItems}
+            headerLink={{
+              href: THREE_C_SEARCH_URL,
+              label: "3C分析とは？",
+            }}
+          />
 
-      <FrameworkCard
-        title="AIDMA"
-        badge="認知〜行動の流れ"
-        items={aidmaItems}
-        headerLink={{
-          href: AIDMA_SEARCH_URL,
-          label: "AIDMAとは？",
-        }}
-      />
+          <FrameworkCard
+            title="AIDMA"
+            badge="認知〜行動の流れ"
+            items={aidmaItems}
+            headerLink={{
+              href: AIDMA_SEARCH_URL,
+              label: "AIDMAとは？",
+            }}
+          />
+        </>
+      )}
 
-      <button
-        type="button"
-        onClick={onNext}
-        className="w-full bg-neutral-900 text-white py-3.5 rounded-xl text-sm font-bold hover:bg-neutral-800"
-      >
-        次へ：補足情報を入力
-      </button>
+      {!unavailable && (
+        <button
+          type="button"
+          onClick={onNext}
+          className="w-full bg-neutral-900 text-white py-3.5 rounded-xl text-sm font-bold hover:bg-neutral-800"
+        >
+          次へ：補足情報を入力
+        </button>
+      )}
     </div>
   );
 }

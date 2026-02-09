@@ -10,6 +10,24 @@ import { runGoogleVisionOCR } from "@/lib/ocr-google";
 import type { MarketingAnalysis } from "@/types/swipe-lp";
 
 const MAX_OCR_IMAGES = parseInt(process.env.MAX_OCR_IMAGES || "5", 10);
+/** この文字数未満だと分析不可とする（HTMLテキスト + OCR の合計） */
+const MIN_CONTENT_LENGTH = 50;
+
+function createUnavailableAnalysis(reason: string): MarketingAnalysis {
+  return {
+    businessType: "",
+    target: "",
+    painPoints: [],
+    solution: "",
+    emotionalTrigger: "",
+    analysisUnavailable: true,
+    unavailableReason: reason,
+    framework: {
+      threeC: { customer: "", competitor: "", company: "" },
+      aidma: { attention: "", interest: "", desire: "", memory: "", action: "" },
+    },
+  };
+}
 
 export interface RunMarketingAnalysisOptions {
   inputType: "url" | "image";
@@ -84,6 +102,16 @@ export async function runMarketingAnalysis(
     }
   } else {
     throw new Error("inputType が url の場合は url が必須です");
+  }
+
+  const combinedLength = htmlText.trim().length + ocrTexts.join("").trim().length;
+  if (combinedLength < MIN_CONTENT_LENGTH) {
+    const reason =
+      inputType === "url" && !process.env.GOOGLE_VISION_API_KEY
+        ? "ページから十分なテキストを取得できませんでした。画像内テキストの読み取り（OCR）が利用できないため、テキストが少ないページでは分析できません。スクリーンショットをアップロードして分析するか、画像で分析を試してください。"
+        : "ページから十分なテキストを取得できませんでした。画像や動画で構成されているLPの可能性があります。スクリーンショットやLPの画像をアップロードすると分析できます。";
+    console.log("[Gaudí Marketing] Insufficient content, returning unavailable", { combinedLength });
+    return createUnavailableAnalysis(reason);
   }
 
   try {

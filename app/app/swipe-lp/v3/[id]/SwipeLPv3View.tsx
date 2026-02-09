@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Sparkles, ImagePlus, UsersRound, MessageSquare, ExternalLink, LayoutList } from "lucide-react";
@@ -14,6 +14,7 @@ import {
   proposeSlidesForV3,
   revertToAnalysisStep,
   revertToSupplementStep,
+  analyzeImageForV3,
 } from "@/actions/swipe-lp-v3";
 import type { Step3FormValues } from "./components/Step3Supplement";
 import type { SwipeLPv3Project, SwipeLPv3Status } from "@/types/swipe-lp-v3";
@@ -27,6 +28,9 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
   const status = project.status;
   const [step3Submitting, setStep3Submitting] = useState(false);
   const [step3Error, setStep3Error] = useState<string | null>(null);
+  const [imageAnalyzing, setImageAnalyzing] = useState(false);
+  const [imageAnalysisError, setImageAnalysisError] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const handleStep2Next = async () => {
     await updateUserSupplement(project.id, "");
@@ -64,6 +68,31 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
   const handleBackToStep3 = async () => {
     await revertToSupplementStep(project.id);
     router.refresh();
+  };
+
+  const handleImageAnalyzeClick = () => {
+    setImageAnalysisError(null);
+    imageInputRef.current?.click();
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    e.target.value = "";
+    setImageAnalyzing(true);
+    setImageAnalysisError(null);
+    try {
+      const formData = new FormData();
+      formData.set("image", file);
+      const result = await analyzeImageForV3(project.id, formData);
+      if (result.error) {
+        setImageAnalysisError(result.error);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setImageAnalyzing(false);
+    }
   };
 
   const header = (
@@ -166,25 +195,55 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
 
       {status === "analysis_done" && analysis && (
         <main className="flex-1 grid min-h-0 grid-cols-1 lg:grid-cols-2">
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            aria-hidden
+            onChange={handleImageFileChange}
+            disabled={imageAnalyzing}
+          />
           {/* 左: パンくず + Step1 URL + 主要分析項目 */}
           <aside className="flex flex-col min-h-0 border-r border-neutral-200 bg-white overflow-y-auto">
             <div className="shrink-0 px-6 pt-4 pb-2 border-b border-neutral-100">
               <StepProgressBar status={displayStatus} />
             </div>
             <div className="p-6 flex-1">
-              <Step2AnalysisLeft
-                inputUrl={project.input_url}
-                marketingAnalysis={analysis}
-              />
+              {imageAnalyzing ? (
+                <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
+                  <Loader2 className="w-10 h-10 animate-spin mb-3" />
+                  <p className="text-sm">画像を分析中...</p>
+                </div>
+              ) : (
+                <Step2AnalysisLeft
+                  inputUrl={project.input_url}
+                  marketingAnalysis={analysis}
+                  onImageAnalyzeClick={handleImageAnalyzeClick}
+                />
+              )}
             </div>
           </aside>
           {/* 右: 3C分析・AIDMA・次へボタン */}
           <section className="overflow-y-auto bg-neutral-50">
-            <div className="p-6">
-              <Step2AnalysisRight
-                marketingAnalysis={analysis}
-                onNext={handleStep2Next}
-              />
+            <div className="p-6 space-y-4">
+              {imageAnalysisError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                  {imageAnalysisError}
+                </div>
+              )}
+              {imageAnalyzing ? (
+                <div className="flex flex-col items-center justify-center py-12 text-neutral-500">
+                  <Loader2 className="w-10 h-10 animate-spin mb-3" />
+                  <p className="text-sm">画像を分析中...</p>
+                </div>
+              ) : (
+                <Step2AnalysisRight
+                  marketingAnalysis={analysis}
+                  onNext={handleStep2Next}
+                  onImageAnalyzeClick={handleImageAnalyzeClick}
+                />
+              )}
             </div>
           </section>
         </main>
@@ -198,37 +257,49 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
               <StepProgressBar status={displayStatus} />
             </div>
             <div className="p-6 flex-1 space-y-6">
-              {analysis && (
-                <>
-                  <FrameworkCard
-                    title="分析要約"
-                    badge="リサーチ結果"
-                    items={[
-                      { label: "ビジネスタイプ", value: analysis.businessType },
-                      { label: "ターゲット", value: analysis.target },
-                      { label: "感情トリガー", value: analysis.emotionalTrigger },
-                      {
-                        label: "解決すべき痛み",
-                        value: analysis.painPoints.map((p) => `・ ${p}`).join("\n"),
-                      },
-                    ]}
-                  />
-                  <FrameworkCard
-                    title="AIDMA"
-                    badge="認知〜行動の流れ"
-                    items={[
-                      { label: "注目（Attention）", value: analysis.framework.aidma.attention },
-                      { label: "興味（Interest）", value: analysis.framework.aidma.interest },
-                      { label: "欲求（Desire）", value: analysis.framework.aidma.desire },
-                      { label: "記憶（Memory）", value: analysis.framework.aidma.memory },
-                      { label: "行動（Action）", value: analysis.framework.aidma.action },
-                    ]}
-                    headerLink={{
-                      href: AIDMA_SEARCH_URL,
-                      label: "AIDMAとは？",
-                    }}
-                  />
-                </>
+              {analysis?.analysisUnavailable ? (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <p className="text-sm font-medium text-amber-900">分析できませんでした</p>
+                  <p className="mt-2 text-sm text-amber-800 whitespace-pre-line">
+                    {analysis.unavailableReason}
+                  </p>
+                  <p className="mt-3 text-xs text-amber-700">
+                    左のStep2で「画像で分析する」からスクリーンショットやLP画像をアップロードしてください。
+                  </p>
+                </div>
+              ) : (
+                analysis && (
+                  <>
+                    <FrameworkCard
+                      title="分析要約"
+                      badge="リサーチ結果"
+                      items={[
+                        { label: "ビジネスタイプ", value: analysis.businessType },
+                        { label: "ターゲット", value: analysis.target },
+                        { label: "感情トリガー", value: analysis.emotionalTrigger },
+                        {
+                          label: "解決すべき痛み",
+                          value: analysis.painPoints.map((p) => `・ ${p}`).join("\n"),
+                        },
+                      ]}
+                    />
+                    <FrameworkCard
+                      title="AIDMA"
+                      badge="認知〜行動の流れ"
+                      items={[
+                        { label: "注目（Attention）", value: analysis.framework.aidma.attention },
+                        { label: "興味（Interest）", value: analysis.framework.aidma.interest },
+                        { label: "欲求（Desire）", value: analysis.framework.aidma.desire },
+                        { label: "記憶（Memory）", value: analysis.framework.aidma.memory },
+                        { label: "行動（Action）", value: analysis.framework.aidma.action },
+                      ]}
+                      headerLink={{
+                        href: AIDMA_SEARCH_URL,
+                        label: "AIDMAとは？",
+                      }}
+                    />
+                  </>
+                )
               )}
             </div>
           </aside>
