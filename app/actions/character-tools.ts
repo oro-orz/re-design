@@ -2,7 +2,8 @@
 "use server";
 
 import Replicate from "replicate";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 
 const BUCKET = "images";
 const FACE_SWAP_MODEL = "cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111";
@@ -39,7 +40,7 @@ function extractUrl(v: unknown): string | null {
  * ファイルの場合は Storage にアップロードする。
  */
 async function resolveImageToPublicUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   userId: string,
   formData: FormData,
   fieldFile: string,
@@ -77,11 +78,9 @@ export async function runCharacterTool(formData: FormData): Promise<{
   outputImageUrl?: string;
   error?: string;
 }> {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return { error: "認証が必要です" };
-  }
+  const user = await getCurrentUserFromSession();
+  if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   if (!process.env.REPLICATE_API_TOKEN) {
     return { error: "REPLICATE_API_TOKEN が未設定です。" };

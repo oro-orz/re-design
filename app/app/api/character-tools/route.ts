@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Replicate from "replicate";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 
 const BUCKET = "images";
 // easel/advanced-face-swap は Firestore 依存で失敗するため代替。Replicate API はバージョン指定が必要な場合あり
@@ -34,7 +35,7 @@ function extractUrl(v: unknown): string | null {
 }
 
 async function resolveImageToPublicUrl(
-  supabase: Awaited<ReturnType<typeof createClient>>,
+  supabase: ReturnType<typeof createAdminClient>,
   userId: string,
   formData: FormData,
   fieldFile: string,
@@ -67,11 +68,11 @@ async function resolveImageToPublicUrl(
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
+  const user = await getCurrentUserFromSession();
+  if (!user) {
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
+  const supabase = createAdminClient();
 
   if (!process.env.REPLICATE_API_TOKEN) {
     return NextResponse.json({ error: "REPLICATE_API_TOKEN が未設定です。" }, { status: 500 });

@@ -1,60 +1,22 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { createClient } from "@/lib/supabase/client";
-import { hasSupabase } from "@/lib/supabase/env";
-import { Loader2 } from "lucide-react";
 
-function LoginForm() {
+function LoginContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // SSOエラーの処理
   useEffect(() => {
-    const ssoError = searchParams.get('error');
+    const ssoError = searchParams.get("error");
     if (ssoError) {
-      const errorMessages: Record<string, string> = {
-        missing_params: '必要なパラメータが不足しています。',
-        invalid_token: '認証トークンが無効です。もう一度お試しください。',
-        user_not_found: 'ユーザーが見つかりませんでした。',
-      };
-      setError(errorMessages[ssoError] || 'ログインに失敗しました。');
+      // 必要に応じてエラー表示（例: クエリを state に持って表示）
     }
   }, [searchParams]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!hasSupabase()) {
-      setError("Supabase が未設定です。");
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (err) {
-        setError(err.message);
-        return;
-      }
-      window.location.href = "/";
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm text-center">
         <div className="mb-8 flex justify-center">
           <Image
             src="/Re-Design-logo.svg"
@@ -66,43 +28,9 @@ function LoginForm() {
             className="h-20 w-auto"
           />
         </div>
-        <form
-          onSubmit={onSubmit}
-          className="flex flex-col gap-4 rounded-2xl border border-neutral-200 bg-white p-6"
-        >
-          <input
-            type="email"
-            placeholder="メールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            className="rounded-xl border border-neutral-200 px-4 py-3 text-neutral-900 placeholder:text-neutral-400"
-          />
-          <input
-            type="password"
-            placeholder="パスワード"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            className="rounded-xl border border-neutral-200 px-4 py-3 text-neutral-900 placeholder:text-neutral-400"
-          />
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-3 text-white disabled:opacity-60"
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "ログイン"
-            )}
-          </button>
-        </form>
+        <p className="text-neutral-600">
+          TMG ポータルからアクセスするか、アプリ内の Google ログインをご利用ください。
+        </p>
       </div>
     </div>
   );
@@ -110,8 +38,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-neutral-50">読み込み中...</div>}>
-      <LoginForm />
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+          読み込み中...
+        </div>
+      }
+    >
+      <LoginContent />
     </Suspense>
   );
 }

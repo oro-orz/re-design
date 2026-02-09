@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 import { hasSupabase } from "@/lib/supabase/env";
 import { ACCEPT_IMAGE } from "@/lib/constants";
 
@@ -35,11 +36,9 @@ export async function uploadProject(formData: FormData) {
     return { error: "Supabase が未設定です。.env.local を確認してください。" };
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "ログインしてください。" };
-  }
+  const user = await getCurrentUserFromSession();
+  if (!user) return { error: "ログインしてください。" };
+  const supabase = createAdminClient();
 
   const projectId = crypto.randomUUID();
   const ext = file.name.split(".").pop() || "png";

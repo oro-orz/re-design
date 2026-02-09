@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 import {
   analyzeImageForStructured,
   generateTemplateFromOneImage,
@@ -17,11 +18,9 @@ export async function listPromptTemplates(): Promise<{
   templates?: PromptTemplate[];
   error?: string;
 }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("prompt_templates")
@@ -38,11 +37,9 @@ export async function listPromptTemplates(): Promise<{
 export async function getPromptTemplate(
   id: string
 ): Promise<{ template?: PromptTemplate; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("prompt_templates")
@@ -61,11 +58,9 @@ export async function getPromptTemplate(
 export async function uploadAndCreateTemplatesFromImages(
   formData: FormData
 ): Promise<{ count?: number; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const prefix = `prompt-templates/${user.id}/${Date.now()}`;
   const urls: string[] = [];
@@ -137,11 +132,9 @@ export async function generatePromptFromTemplateAndText(
     aspectRatio?: string;
   }
 ): Promise<{ prompt?: string; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: template, error: fetchErr } = await supabase
     .from("prompt_templates")
@@ -200,11 +193,9 @@ export async function generatePromptFromTemplateAndText(
 export async function createPromptTemplate(
   formData: FormData
 ): Promise<{ template?: PromptTemplate; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const prompt_text = (formData.get("prompt_text") as string) || null;
   const memo = (formData.get("memo") as string) || null;
@@ -245,11 +236,9 @@ export async function createPromptTemplate(
 export async function uploadImagesForLibrary(
   formData: FormData
 ): Promise<{ imageUrls?: string[]; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const prefix = `prompt-templates/temp-${Date.now()}`;
   const urls: string[] = [];
@@ -288,11 +277,9 @@ export async function updatePromptTemplate(
     >
   >
 ): Promise<{ template?: PromptTemplate; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   // 更新可能なフィールドのみを抽出
   const updateData: Record<string, unknown> = {};
@@ -327,11 +314,9 @@ export async function updatePromptTemplateImage(
   id: string,
   formData: FormData
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const imageFile = formData.get("image") as File | null;
   if (!imageFile?.size) return { error: "画像を選択してください" };
@@ -365,11 +350,9 @@ export async function updatePromptTemplateImage(
 export async function regeneratePromptTemplate(
   id: string
 ): Promise<{ template?: PromptTemplate; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: existing } = await supabase
     .from("prompt_templates")
@@ -439,11 +422,9 @@ export async function regeneratePromptTemplatesBulk(
   results?: { id: string; error?: string }[];
   error?: string;
 }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
   if (!ids.length) return { successCount: 0, failCount: 0, results: [] };
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -515,11 +496,9 @@ export async function regeneratePromptTemplatesBulk(
 export async function deletePromptTemplate(
   id: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("prompt_templates")

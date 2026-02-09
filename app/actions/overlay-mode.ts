@@ -1,7 +1,8 @@
 // actions/overlay-mode.ts
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 import {
   generateBaseImage,
   rebuildBaseImage,
@@ -32,12 +33,9 @@ async function fetchImageAsBase64(
  */
 export async function uploadAndGenerateBase(formData: FormData) {
   try {
-    const supabase = await createClient();
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return { error: "認証が必要です" };
-    }
+    const user = await getCurrentUserFromSession();
+    if (!user) return { error: "認証が必要です" };
+    const supabase = createAdminClient();
 
     const mode = (formData.get("mode") as BaseImageMode) || "text-removal";
     const changePersonStr = formData.get("changePerson") as string;

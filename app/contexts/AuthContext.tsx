@@ -21,7 +21,6 @@ import {
   createMockEmployee,
 } from "@/lib/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
-import { createClient } from "@/lib/supabase/client";
 
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 const LAST_SIGN_IN_KEY = "lastSignInTime";
@@ -114,23 +113,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const syncSupabaseSession = async (firebaseUser: User): Promise<void> => {
+  const setSessionCookie = async (
+    firebaseUser: User,
+    employee: Employee
+  ): Promise<void> => {
     if (!process.env.NEXT_PUBLIC_TMG_PORTAL_URL) return;
     try {
       const idToken = await firebaseUser.getIdToken();
       if (!idToken) return;
-      const res = await fetch("/api/auth/supabase-session", {
+      await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!res.ok) return;
-      const data = (await res.json()) as { hashed_token?: string };
-      if (!data.hashed_token) return;
-      const supabase = createClient();
-      await supabase.auth.verifyOtp({
-        token_hash: data.hashed_token,
-        type: "magiclink",
+        body: JSON.stringify({
+          idToken,
+          employee: {
+            employee_number: employee.employee_number,
+            name: employee.name,
+            email: employee.google_email,
+          },
+        }),
       });
     } catch {
       // ローカルや API 未設定時は無視
@@ -280,7 +281,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (result.employee) {
             setEmployee(result.employee);
             if (!mountedRef.current) return;
-            await syncSupabaseSession(firebaseUser);
+            await setSessionCookie(firebaseUser, result.employee);
           } else {
             await logOut();
             clearSignInTime();
@@ -364,6 +365,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(firebaseUser);
       setEmployee(result.employee);
       saveSignInTime();
+      if (process.env.NEXT_PUBLIC_TMG_PORTAL_URL) {
+        await setSessionCookie(firebaseUser, result.employee);
+      }
     } catch (err) {
       const authError = err as AuthError;
       if (authError.code) {
@@ -378,6 +382,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
+      if (process.env.NEXT_PUBLIC_TMG_PORTAL_URL) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch {
+          // セッション Cookie 削除は失敗しても続行
+        }
+      }
       await logOut();
       clearSignInTime();
       setUser(null);

@@ -1,6 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 import { runSlideCopyEnricher } from "@/lib/swipe-lp/gaudi/copy/slide-copy-enricher";
 import { runMarketingAnalysis } from "@/lib/swipe-lp/gaudi/marketing/analyzer";
 import {
@@ -14,11 +15,9 @@ import type { SwipeLPv3Project, SwipeLPv3Slide } from "@/types/swipe-lp-v3";
 export async function createV3Project(
   url: string
 ): Promise<{ project?: SwipeLPv3Project; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const trimmed = url.trim();
   if (!trimmed) return { error: "URLを入力してください" };
@@ -43,11 +42,9 @@ export async function createV3Project(
 export async function analyzeUrlForV3(
   projectId: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: project } = await supabase
     .from("swipe_lp_v3_projects")
@@ -88,11 +85,9 @@ export async function analyzeImageForV3(
   projectId: string,
   formData: FormData
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: project } = await supabase
     .from("swipe_lp_v3_projects")
@@ -137,11 +132,9 @@ export async function analyzeImageForV3(
 export async function getV3Project(
   projectId: string
 ): Promise<{ project?: SwipeLPv3Project; error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -160,11 +153,9 @@ export async function getV3Project(
 export async function revertToAnalysisStep(
   projectId: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -182,11 +173,9 @@ export async function revertToAnalysisStep(
 export async function revertToSupplementStep(
   projectId: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -205,11 +194,9 @@ export async function updateUserSupplement(
   projectId: string,
   supplement: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -237,11 +224,9 @@ export async function updateStep3Settings(
   projectId: string,
   settings: Step3Settings
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -263,11 +248,9 @@ export async function updateStep3Settings(
 export async function proposeSlidesForV3(
   projectId: string
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: project, error: fetchError } = await supabase
     .from("swipe_lp_v3_projects")
@@ -331,11 +314,9 @@ export async function updateV3Slides(
   projectId: string,
   slides: SwipeLPv3Slide[]
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -354,11 +335,9 @@ export async function updateSelectedTemplate(
   projectId: string,
   templateId: string | null
 ): Promise<{ error?: string }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { error } = await supabase
     .from("swipe_lp_v3_projects")
@@ -384,11 +363,9 @@ type TemplateListItem = {
 export async function listPromptTemplates(): Promise<
   { templates?: TemplateListItem[]; error?: string }
 > {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("prompt_templates")
@@ -410,11 +387,9 @@ export async function listPromptTemplatesWithRecommendations(
   others?: TemplateListItem[];
   error?: string;
 }> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
+  const supabase = createAdminClient();
 
   const { data: templates, error } = await supabase
     .from("prompt_templates")
