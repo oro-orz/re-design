@@ -27,7 +27,8 @@ function getCredentialFromEnv():
         };
       }
     } catch (e) {
-      console.error('Firebase Admin: サービスアカウント JSON のパースに失敗しました');
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[supabase-session] Firebase Admin: サービスアカウント JSON のパースに失敗:', msg);
       return null;
     }
   }
@@ -79,9 +80,10 @@ export function getFirebaseAdmin() {
     }
 
     auth = getAuth(app);
+    console.info('[supabase-session] Firebase Admin 初期化 OK, project:', cred.projectId);
     return auth;
   } catch (error: any) {
-    console.error('Firebase Admin SDK初期化エラー:', error.message);
+    console.error('[supabase-session] Firebase Admin SDK 初期化エラー:', error?.message ?? error);
     return null;
   }
 }
