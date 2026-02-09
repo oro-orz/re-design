@@ -1,8 +1,8 @@
 "use server";
 
 import Replicate from "replicate";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCurrentUserFromSession } from "@/lib/session";
 import { hasSupabase } from "@/lib/supabase/env";
 import type { ModeId } from "@/lib/constants";
 
@@ -82,11 +82,8 @@ export async function generateImage(params: {
     return { error: "Supabase が未設定です。" };
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "ログインしてください。" };
-  }
+  const user = await getCurrentUserFromSession();
+  if (!user) return { error: "ログインしてください。" };
 
   const res = await fetch(output);
   if (!res.ok) {

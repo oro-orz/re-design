@@ -8,20 +8,26 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node scripts/seed-users.mjs",
-    "seed:csv": "node scripts/seed-from-csv.mjs"
+    "seed:csv": "node scripts/seed-from-csv.mjs",
+    "check:gaudi": "node scripts/check-gaudi-data.mjs"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.78.0",
+    "@types/js-yaml": "^4.0.9",
+    "cheerio": "^1.1.0",
     "firebase": "^12.8.0",
     "firebase-admin": "^13.6.0",
+    "js-yaml": "^4.1.1",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.563.0",
     "next": "14.2.18",
     "openai": "^6.16.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "replicate": "^1.4.0"
+    "replicate": "^1.4.0",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",

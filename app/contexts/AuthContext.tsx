@@ -31,6 +31,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   hadTokenThisSession: boolean;
+  /** Firebase ログイン時、Server Action に渡す ID トークン取得（本番 Supabase 連携用） */
+  getIdToken: () => Promise<string | null>;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -108,6 +110,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
         employee: null,
         errorMessage: "社員情報の取得に失敗しました",
       };
+    }
+  };
+
+  const setSessionCookie = async (
+    firebaseUser: User,
+    employee: Employee
+  ): Promise<void> => {
+    if (!process.env.NEXT_PUBLIC_TMG_PORTAL_URL) return;
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      if (!idToken) return;
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken,
+          employee: {
+            employee_number: employee.employee_number,
+            name: employee.name,
+            email: employee.google_email,
+          },
+        }),
+      });
+    } catch {
+      // ローカルや API 未設定時は無視
     }
   };
 
@@ -253,6 +280,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (!mountedRef.current) return;
           if (result.employee) {
             setEmployee(result.employee);
+            if (!mountedRef.current) return;
+            await setSessionCookie(firebaseUser, result.employee);
           } else {
             await logOut();
             clearSignInTime();
@@ -336,6 +365,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(firebaseUser);
       setEmployee(result.employee);
       saveSignInTime();
+      if (process.env.NEXT_PUBLIC_TMG_PORTAL_URL) {
+        await setSessionCookie(firebaseUser, result.employee);
+      }
     } catch (err) {
       const authError = err as AuthError;
       if (authError.code) {
@@ -350,6 +382,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
+      if (process.env.NEXT_PUBLIC_TMG_PORTAL_URL) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch {
+          // セッション Cookie 削除は失敗しても続行
+        }
+      }
       await logOut();
       clearSignInTime();
       setUser(null);
@@ -364,6 +403,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
+  const getIdToken = async (): Promise<string | null> => {
+    if (!user) return null;
+    try {
+      return await user.getIdToken(false);
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -372,6 +420,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loading,
         error,
         hadTokenThisSession,
+        getIdToken,
         login,
         logout,
         clearError,
