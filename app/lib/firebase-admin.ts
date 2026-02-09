@@ -51,7 +51,8 @@ export function getFirebaseAdmin() {
 
 /**
  * Firebase ID トークンを検証し、デコード結果を返す。
- * Server Action でクライアントから渡されたトークンの検証に使用する。
+ * カスタムトークンログイン時は ID トークンに email が含まれないことがあるため、
+ * 無い場合は getUser(uid) でユーザー情報から取得する。
  */
 export async function verifyFirebaseIdToken(
   idToken: string
@@ -60,9 +61,14 @@ export async function verifyFirebaseIdToken(
   if (!adminAuth) return null;
   try {
     const decoded = await adminAuth.verifyIdToken(idToken);
+    let email = decoded.email ?? undefined;
+    if (!email && decoded.uid) {
+      const userRecord = await adminAuth.getUser(decoded.uid);
+      email = userRecord.email ?? undefined;
+    }
     return {
       uid: decoded.uid,
-      email: decoded.email ?? undefined,
+      email,
     };
   } catch {
     return null;

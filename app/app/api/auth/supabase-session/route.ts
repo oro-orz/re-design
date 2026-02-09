@@ -39,9 +39,15 @@ export async function POST(request: NextRequest) {
   }
 
   const decoded = await verifyFirebaseIdToken(idToken);
-  if (!decoded?.email) {
+  if (!decoded) {
     return NextResponse.json(
-      { error: "無効なトークンです" },
+      { error: "トークンの検証に失敗しました（Firebase Admin の設定を確認してください）" },
+      { status: 500 }
+    );
+  }
+  if (!decoded.email) {
+    return NextResponse.json(
+      { error: "トークンにメールアドレスが含まれていません。ポータル側でカスタムトークンに email を設定してください。" },
       { status: 401 }
     );
   }
