@@ -40,7 +40,7 @@ export async function createSupabaseSession(
 ): Promise<{ hashed_token: string } | null> {
   try {
     const supabase = createAdminClient();
-    
+
     // Supabase Admin APIを使用してマジックリンクを生成
     const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
@@ -64,4 +64,32 @@ export async function createSupabaseSession(
     console.error('セッション作成エラー:', error);
     throw error;
   }
+}
+
+/**
+ * Firebase ログイン後に Supabase セッションを発行する。
+ * メールに対応する auth.users がなければ作成してからマジックリンクトークンを返す。
+ */
+export async function createSupabaseSessionForFirebaseEmail(
+  userEmail: string
+): Promise<{ hashed_token: string } | null> {
+  const supabase = createAdminClient();
+  const email = userEmail.toLowerCase().trim();
+
+  // 既存ユーザーを検索（generateLink は既存ユーザーが前提のため、いなければ作成）
+  const { data: listData } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const existing = listData?.users?.find((u) => u.email?.toLowerCase() === email);
+  if (!existing) {
+    const { error: createError } = await supabase.auth.admin.createUser({
+      email,
+      password: crypto.randomUUID() + crypto.randomUUID(),
+      email_confirm: true,
+    });
+    if (createError) {
+      console.error('Supabase createUser エラー:', createError);
+      return null;
+    }
+  }
+
+  return createSupabaseSession(email);
 }

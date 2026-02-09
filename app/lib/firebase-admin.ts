@@ -48,3 +48,23 @@ export function getFirebaseAdmin() {
     return null;
   }
 }
+
+/**
+ * Firebase ID トークンを検証し、デコード結果を返す。
+ * Server Action でクライアントから渡されたトークンの検証に使用する。
+ */
+export async function verifyFirebaseIdToken(
+  idToken: string
+): Promise<{ uid: string; email?: string } | null> {
+  const adminAuth = getFirebaseAdmin();
+  if (!adminAuth) return null;
+  try {
+    const decoded = await adminAuth.verifyIdToken(idToken);
+    return {
+      uid: decoded.uid,
+      email: decoded.email ?? undefined,
+    };
+  } catch {
+    return null;
+  }
+}

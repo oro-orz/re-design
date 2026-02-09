@@ -21,6 +21,7 @@ import {
   createMockEmployee,
 } from "@/lib/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { createClient } from "@/lib/supabase/client";
 
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 const LAST_SIGN_IN_KEY = "lastSignInTime";
@@ -31,6 +32,8 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   hadTokenThisSession: boolean;
+  /** Firebase ログイン時、Server Action に渡す ID トークン取得（本番 Supabase 連携用） */
+  getIdToken: () => Promise<string | null>;
   login: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
@@ -108,6 +111,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
         employee: null,
         errorMessage: "社員情報の取得に失敗しました",
       };
+    }
+  };
+
+  const syncSupabaseSession = async (firebaseUser: User): Promise<void> => {
+    if (!process.env.NEXT_PUBLIC_TMG_PORTAL_URL) return;
+    try {
+      const idToken = await firebaseUser.getIdToken();
+      if (!idToken) return;
+      const res = await fetch("/api/auth/supabase-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as { hashed_token?: string };
+      if (!data.hashed_token) return;
+      const supabase = createClient();
+      await supabase.auth.verifyOtp({
+        token_hash: data.hashed_token,
+        type: "magiclink",
+      });
+    } catch {
+      // ローカルや API 未設定時は無視
     }
   };
 
@@ -253,6 +279,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           if (!mountedRef.current) return;
           if (result.employee) {
             setEmployee(result.employee);
+            if (!mountedRef.current) return;
+            await syncSupabaseSession(firebaseUser);
           } else {
             await logOut();
             clearSignInTime();
@@ -364,6 +392,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
+  const getIdToken = async (): Promise<string | null> => {
+    if (!user) return null;
+    try {
+      return await user.getIdToken(false);
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -372,6 +409,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loading,
         error,
         hadTokenThisSession,
+        getIdToken,
         login,
         logout,
         clearError,
