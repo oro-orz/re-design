@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "@/lib/polyfill-file";
 import { notoSans } from "@/lib/fonts";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TMGPortalLoginModal } from "./components/TMGPortalLoginModal";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,10 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className={`${notoSans.className} antialiased bg-white text-neutral-900`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+        <TMGPortalLoginModal />
+        {children}
+      </AuthProvider>
       </body>
     </html>
   );
