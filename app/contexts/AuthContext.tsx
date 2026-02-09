@@ -121,7 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const idToken = await firebaseUser.getIdToken();
       if (!idToken) return;
-      await fetch("/api/auth/session", {
+      const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,8 +133,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           },
         }),
       });
-    } catch {
-      // ローカルや API 未設定時は無視
+      if (!res.ok) {
+        console.error(
+          "[SSO] セッションCookie設定失敗",
+          res.status,
+          await res.text()
+        );
+      }
+    } catch (error) {
+      console.error("[SSO] セッションCookie設定エラー", error);
     }
   };
 

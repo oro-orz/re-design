@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { Upload, Loader2, Trash2, Sparkles, X, Copy, CopyCheck, RefreshCw, Save, Palette, Type, Search, ExternalLink, MessageSquare, ClipboardPaste, ImagePlus, UsersRound, LayoutList } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   listPromptTemplates,
   deletePromptTemplate,
@@ -193,6 +194,7 @@ export function LibraryManageView() {
   const [editingCategory, setEditingCategory] = useState("");
   const [editingSubcategory, setEditingSubcategory] = useState("");
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   // プロンプト生成完了時に結果エリアへスクロール
   useEffect(() => {
@@ -228,9 +230,14 @@ export function LibraryManageView() {
     setLoading(false);
   };
 
+  // 認証完了後のみ load 実行（レースコンディション防止: セッションCookie設定前にServer Actionを呼ばない）
   useEffect(() => {
-    load();
-  }, []);
+    if (!authLoading && user) {
+      load();
+    } else if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [authLoading, user]);
 
   const uniqueCategories = useMemo(() => {
     const set = new Set<string>();

@@ -69,23 +69,7 @@ export async function POST(request: NextRequest) {
 
     const employee = rows[0] as EmployeeRow;
 
-    const allowedRoles = ["役員", "M", "PM"];
-    const isSystemDept = employee.department === "システム課";
-    const hasAllowedRole = allowedRoles.includes(employee.role);
-    const hasPermission = isSystemDept || hasAllowedRole;
-
-    if (!hasPermission) {
-      const detailMessage = isDevelopment
-        ? `権限不足: department="${employee.department}", role="${employee.role}"`
-        : "このダッシュボードへのアクセス権限がありません";
-
-      return NextResponse.json({
-        exists: true,
-        authorized: false,
-        message: detailMessage,
-      });
-    }
-
+    // 社員マスタに存在する全社員がログイン可能
     return NextResponse.json({
       exists: true,
       authorized: true,
