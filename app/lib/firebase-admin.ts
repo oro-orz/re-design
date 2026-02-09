@@ -4,9 +4,49 @@ import { getAuth, Auth } from 'firebase-admin/auth';
 let app: App | undefined;
 let auth: Auth | undefined;
 
+function getCredentialFromEnv():
+  | { projectId: string; clientEmail: string; privateKey: string }
+  | null {
+  // 1) サービスアカウント JSON 文字列（Vercel で FIREBASE_SERVICE_ACCOUNT_KEY や GOOGLE_APPLICATION_CREDENTIALS_JSON を使っている場合）
+  const jsonKey =
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY ??
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  if (jsonKey) {
+    try {
+      const parsed = JSON.parse(jsonKey) as {
+        project_id?: string;
+        client_email?: string;
+        private_key?: string;
+      };
+      const key = parsed.private_key?.replace(/\\n/g, '\n');
+      if (parsed.project_id && parsed.client_email && key) {
+        return {
+          projectId: parsed.project_id,
+          clientEmail: parsed.client_email,
+          privateKey: key,
+        };
+      }
+    } catch (e) {
+      console.error('Firebase Admin: サービスアカウント JSON のパースに失敗しました');
+      return null;
+    }
+  }
+
+  // 2) 個別の環境変数
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  if (projectId && clientEmail && privateKey) {
+    return { projectId, clientEmail, privateKey };
+  }
+
+  return null;
+}
+
 /**
  * Firebase Admin SDKの初期化
- * 環境変数が設定されている場合のみ初期化
+ * FIREBASE_SERVICE_ACCOUNT_KEY / GOOGLE_APPLICATION_CREDENTIALS_JSON（JSON文字列）
+ * または FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY で初期化
  */
 export function getFirebaseAdmin() {
   // 既に初期化されている場合は既存のインスタンスを返す
@@ -14,29 +54,26 @@ export function getFirebaseAdmin() {
     return auth;
   }
 
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-
-  // 環境変数が設定されていない場合はnullを返す
-  if (!projectId || !clientEmail || !privateKey) {
+  const cred = getCredentialFromEnv();
+  if (!cred) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Firebase Admin SDK: 環境変数が設定されていません');
+      console.warn(
+        'Firebase Admin SDK: 環境変数が設定されていません（FIREBASE_SERVICE_ACCOUNT_KEY または FIREBASE_PROJECT_ID/CLIENT_EMAIL/PRIVATE_KEY）'
+      );
     }
     return null;
   }
 
   try {
-    // 既存のアプリインスタンスを確認
     const existingApps = getApps();
     if (existingApps.length > 0) {
       app = existingApps[0];
     } else {
       app = initializeApp({
         credential: cert({
-          projectId,
-          clientEmail,
-          privateKey,
+          projectId: cred.projectId,
+          clientEmail: cred.clientEmail,
+          privateKey: cred.privateKey,
         }),
       });
     }
@@ -70,7 +107,8 @@ export async function verifyFirebaseIdToken(
       uid: decoded.uid,
       email,
     };
-  } catch {
+  } catch (err: any) {
+    console.error("[supabase-session] verifyFirebaseIdToken failed:", err?.code ?? err?.message ?? err);
     return null;
   }
 }

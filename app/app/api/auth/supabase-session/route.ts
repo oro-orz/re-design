@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyFirebaseIdToken } from "@/lib/firebase-admin";
+import { getFirebaseAdmin, verifyFirebaseIdToken } from "@/lib/firebase-admin";
 import { createSupabaseSessionForFirebaseEmail } from "@/lib/sso";
 
 /**
@@ -38,10 +38,24 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const adminAuth = getFirebaseAdmin();
+  if (!adminAuth) {
+    return NextResponse.json(
+      {
+        error:
+          "Firebase Admin が初期化できません。Vercel の FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY を確認してください。",
+      },
+      { status: 500 }
+    );
+  }
+
   const decoded = await verifyFirebaseIdToken(idToken);
   if (!decoded) {
     return NextResponse.json(
-      { error: "トークンの検証に失敗しました（Firebase Admin の設定を確認してください）" },
+      {
+        error:
+          "トークン検証に失敗しました。Vercel の Functions ログに [supabase-session] で詳細が出ます。プロジェクト ID が子サイトと一致しているか確認してください。",
+      },
       { status: 500 }
     );
   }
