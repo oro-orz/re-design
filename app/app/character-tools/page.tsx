@@ -27,7 +27,6 @@ function CharacterToolsContent() {
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [resultUrls, setResultUrls] = useState<string[] | null>(null);
   const [downloadingZip, setDownloadingZip] = useState(false);
-  const [multiPoseCount, setMultiPoseCount] = useState(6);
   const formRef = useRef<HTMLFormElement>(null);
   const targetFileRef = useRef<HTMLInputElement>(null);
   const swapFileRef = useRef<HTMLInputElement>(null);
@@ -161,7 +160,9 @@ function CharacterToolsContent() {
     const formData = new FormData(formRef.current);
     const isFaceSwap = (formData.get("mode") as string) === "face-swap";
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2分でタイムアウト
+    // マルチポーズは枚数分のレート制限待機があるため長め（最大約12分）
+    const timeoutMs = (formData.get("mode") as string) === "multi-pose" ? 720000 : 120000;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch("/api/character-tools", {
         method: "POST",
@@ -362,7 +363,7 @@ function CharacterToolsContent() {
         <input type="hidden" name="targetImageUrl" value={targetLibraryUrl || ""} />
         <input type="hidden" name="swapImageUrl" value={swapLibraryUrl || ""} />
         <input type="hidden" name="characterImageUrl" value={characterLibraryUrl || ""} />
-        {mode === "multi-pose" && <input type="hidden" name="count" value={multiPoseCount} />}
+        {mode === "multi-pose" && <input type="hidden" name="count" value="4" />}
         {/* 左: モード切替 + 画像選択 */}
         <aside className="flex flex-col min-h-0 border-r border-neutral-200 bg-white">
           <div className="shrink-0 p-4 border-b border-neutral-200">
@@ -564,29 +565,6 @@ function CharacterToolsContent() {
               </div>
             )}
 
-            {mode === "multi-pose" && (
-              <div className="rounded-xl border border-neutral-200 bg-white p-4">
-                <label className="block text-sm font-semibold text-neutral-800 mb-2">生成枚数</label>
-                <div className="flex flex-wrap gap-2">
-                  {[4, 6, 9, 12].map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => setMultiPoseCount(n)}
-                      className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                        multiPoseCount === n
-                          ? "border-neutral-900 bg-neutral-900 text-white"
-                          : "border-neutral-200 hover:border-neutral-300"
-                      }`}
-                    >
-                      {n}枚
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-neutral-500">同じキャラの様々なポーズ・表情を複数枚まとめて生成します（プロンプト不要）。</p>
-              </div>
-            )}
-
             {mode === "face-swap" && canRunFaceSwap && (
               <button
                 type="submit"
@@ -611,7 +589,7 @@ function CharacterToolsContent() {
                 disabled={!canRunMultiPose || loading}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
               >
-                {loading ? "生成中…（最大2分かかることがあります）" : `${multiPoseCount}枚のポーズを生成`}
+                {loading ? "生成中…（最大2分かかることがあります）" : "4枚のポーズを生成"}
               </button>
             )}
             {error && (

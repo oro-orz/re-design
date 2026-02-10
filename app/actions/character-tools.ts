@@ -6,6 +6,46 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUserFromSession } from "@/lib/session";
 
 const BUCKET = "images";
+
+/** 429 レスポンス本文から retry_after（秒）を取得 */
+function getRetryAfterSeconds(error: unknown, defaultSeconds = 10): number {
+  const msg = error instanceof Error ? error.message : String(error);
+  const match = msg.match(/\{"detail".*?"retry_after"\s*:\s*(\d+)/);
+  if (match) {
+    const n = parseInt(match[1], 10);
+    if (Number.isFinite(n) && n >= 0) return Math.min(n, 60);
+  }
+  return defaultSeconds;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function runWithRetry<T>(
+  replicate: Replicate,
+  model: `${string}/${string}`,
+  options: { input: Record<string, unknown> },
+  maxRetries = 3
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return (await replicate.run(model, options)) as T;
+    } catch (e) {
+      lastError = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("429") && attempt < maxRetries) {
+        const waitSec = getRetryAfterSeconds(e);
+        await sleep(waitSec * 1000);
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastError;
+}
+
 const FACE_SWAP_MODEL = "cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111";
 const KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro";
 
@@ -117,7 +157,7 @@ export async function runCharacterTool(formData: FormData): Promise<{
     };
 
     try {
-      const out = await replicate.run(FACE_SWAP_MODEL as `${string}/${string}`, { input });
+      const out = await runWithRetry(replicate, FACE_SWAP_MODEL as `${string}/${string}`, { input });
       const url = extractUrl(out);
       if (!url) return { error: "生成画像のURLを取得できませんでした。" };
       return { outputImageUrl: url };
@@ -143,7 +183,7 @@ export async function runCharacterTool(formData: FormData): Promise<{
     }
 
     try {
-      const out = await replicate.run(KONTEXT_MODEL as `${string}/${string}`, {
+      const out = await runWithRetry(replicate, KONTEXT_MODEL as `${string}/${string}`, {
         input: {
           input_image: image.url,
           prompt,

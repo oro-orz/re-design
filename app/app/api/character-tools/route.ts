@@ -4,6 +4,46 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUserFromSession } from "@/lib/session";
 
 const BUCKET = "images";
+
+/** 429 レスポンス本文から retry_after（秒）を取得。無い場合はデフォルトを返す */
+function getRetryAfterSeconds(error: unknown, defaultSeconds = 10): number {
+  const msg = error instanceof Error ? error.message : String(error);
+  const match = msg.match(/\{"detail".*?"retry_after"\s*:\s*(\d+)/);
+  if (match) {
+    const n = parseInt(match[1], 10);
+    if (Number.isFinite(n) && n >= 0) return Math.min(n, 60);
+  }
+  return defaultSeconds;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** replicate.run を 429 時に retry_after 待機してリトライ（最大 maxRetries 回） */
+async function runWithRetry<T>(
+  replicate: Replicate,
+  model: `${string}/${string}`,
+  options: { input: Record<string, unknown> },
+  maxRetries = 3
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return (await replicate.run(model, options)) as T;
+    } catch (e) {
+      lastError = e;
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("429") && attempt < maxRetries) {
+        const waitSec = getRetryAfterSeconds(e);
+        await sleep(waitSec * 1000);
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw lastError;
+}
 // easel/advanced-face-swap は Firestore 依存で失敗するため代替。Replicate API はバージョン指定が必要な場合あり
 const FACE_SWAP_MODEL = "cdingram/face-swap:d1d6ea8c8be89d664a07a457526f7128109dee7030fdac424788d762c71ed111";
 const KONTEXT_MODEL = "black-forest-labs/flux-kontext-pro";
@@ -121,7 +161,7 @@ export async function POST(request: NextRequest) {
     };
 
     try {
-      const out = await replicate.run(FACE_SWAP_MODEL as `${string}/${string}`, { input });
+      const out = await runWithRetry(replicate, FACE_SWAP_MODEL as `${string}/${string}`, { input });
       const url = extractUrl(out);
       if (!url) {
         return NextResponse.json({ error: "生成画像のURLを取得できませんでした。" }, { status: 500 });
@@ -151,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const out = await replicate.run(KONTEXT_MODEL as `${string}/${string}`, {
+      const out = await runWithRetry(replicate, KONTEXT_MODEL as `${string}/${string}`, {
         input: {
           input_image: image.url,
           prompt,
@@ -181,21 +221,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: image.error }, { status: 400 });
     }
 
-    // マルチポーズ用の固定プロンプト（ユーザー入力不要・白背景）
-    const multiPosePrompt =
-      "The same character in various poses and expressions, different angles and emotions, each image different. Manga or cartoon style, consistent character design. Plain white background.";
+    // マルチポーズ用: 4枚でバラエティが出るよう、枚数ごとに異なる表情・ポーズを指定
+    const baseStyle =
+      "The same character, manga or cartoon style, consistent character design. Plain white background.";
+    const multiPosePrompts = [
+      `${baseStyle} Happy, smiling, cheerful expression. Slight smile, eyes relaxed.`,
+      `${baseStyle} Surprised, shocked expression. Eyes wide open, mouth open in shock.`,
+      `${baseStyle} Angry or frustrated expression. Furrowed brows, shouting or gritting teeth.`,
+      `${baseStyle} Thoughtful or worried expression. Slight frown, looking aside or down, pensive mood.`,
+    ];
 
-    const countStr = (formData.get("count") as string) || "6";
-    const count = Math.min(12, Math.max(1, parseInt(countStr, 10) || 6));
+    const countStr = (formData.get("count") as string) || "4";
+    const count = Math.min(4, Math.max(1, parseInt(countStr, 10) || 4));
 
+    // レート制限対策: 6回/分・バースト1のため、リクエスト間に待機する
+    const INTERVAL_MS = 11 * 1000; // 約6回/分に収める
     const urls: string[] = [];
     try {
       for (let i = 0; i < count; i++) {
+        if (i > 0) await sleep(INTERVAL_MS);
         const seed = Math.floor(Math.random() * 2147483647);
-        const out = await replicate.run(KONTEXT_MODEL as `${string}/${string}`, {
+        const prompt = multiPosePrompts[i % multiPosePrompts.length];
+        const out = await runWithRetry(replicate, KONTEXT_MODEL as `${string}/${string}`, {
           input: {
             input_image: image.url,
-            prompt: multiPosePrompt,
+            prompt,
             aspect_ratio: "match_input_image",
             seed,
           },
