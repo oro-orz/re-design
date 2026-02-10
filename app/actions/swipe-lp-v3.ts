@@ -127,11 +127,12 @@ export async function analyzeImageForV3(
 }
 
 /**
- * v3プロジェクト取得
+ * v3プロジェクト取得（認証済みのRe:Designユーザーなら誰でも閲覧可能）
+ * @returns isOwner: 閲覧者がプロジェクトの作成者かどうか（編集可否の判定に使用）
  */
 export async function getV3Project(
   projectId: string
-): Promise<{ project?: SwipeLPv3Project; error?: string }> {
+): Promise<{ project?: SwipeLPv3Project; error?: string; isOwner?: boolean }> {
   const user = await getCurrentUserFromSession();
   if (!user) return { error: "認証が必要です" };
   const supabase = createAdminClient();
@@ -140,11 +141,12 @@ export async function getV3Project(
     .from("swipe_lp_v3_projects")
     .select("*")
     .eq("id", projectId)
-    .eq("user_id", user.id)
     .single();
 
   if (error || !data) return { error: "プロジェクトが見つかりません" };
-  return { project: data as SwipeLPv3Project };
+  const project = data as SwipeLPv3Project;
+  const isOwner = project.user_id === user.id;
+  return { project, isOwner };
 }
 
 /**

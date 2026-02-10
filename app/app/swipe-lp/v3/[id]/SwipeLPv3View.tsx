@@ -21,9 +21,11 @@ import type { SwipeLPv3Project, SwipeLPv3Status } from "@/types/swipe-lp-v3";
 
 interface SwipeLPv3ViewProps {
   project: SwipeLPv3Project;
+  /** 他ユーザーによる閲覧時は true（編集・更新不可） */
+  readOnly?: boolean;
 }
 
-export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
+export default function SwipeLPv3View({ project, readOnly = false }: SwipeLPv3ViewProps) {
   const router = useRouter();
   const status = project.status;
   const [step3Submitting, setStep3Submitting] = useState(false);
@@ -102,6 +104,11 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
           <h1 className="text-sm font-bold text-neutral-900 leading-tight">Re:Design</h1>
           <p className="text-[10px] text-neutral-500 leading-tight truncate max-w-[280px]">
             {status === "analyzing" ? "AI分析中..." : project.input_url}
+            {readOnly && (
+              <span className="ml-1.5 inline-block px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-medium">
+                閲覧専用
+              </span>
+            )}
           </p>
         </div>
       </div>
@@ -195,15 +202,17 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
 
       {status === "analysis_done" && analysis && (
         <main className="flex-1 grid min-h-0 grid-cols-1 lg:grid-cols-2">
-          <input
-            ref={imageInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            aria-hidden
-            onChange={handleImageFileChange}
-            disabled={imageAnalyzing}
-          />
+          {!readOnly && (
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-hidden
+              onChange={handleImageFileChange}
+              disabled={imageAnalyzing}
+            />
+          )}
           {/* 左: パンくず + Step1 URL + 主要分析項目 */}
           <aside className="flex flex-col min-h-0 border-r border-neutral-200 bg-white overflow-y-auto">
             <div className="shrink-0 px-6 pt-4 pb-2 border-b border-neutral-100">
@@ -219,7 +228,7 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
                 <Step2AnalysisLeft
                   inputUrl={project.input_url}
                   marketingAnalysis={analysis}
-                  onImageAnalyzeClick={handleImageAnalyzeClick}
+                  onImageAnalyzeClick={readOnly ? undefined : handleImageAnalyzeClick}
                 />
               )}
             </div>
@@ -241,7 +250,8 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
                 <Step2AnalysisRight
                   marketingAnalysis={analysis}
                   onNext={handleStep2Next}
-                  onImageAnalyzeClick={handleImageAnalyzeClick}
+                  onImageAnalyzeClick={readOnly ? undefined : handleImageAnalyzeClick}
+                  readOnly={readOnly}
                 />
               )}
             </div>
@@ -318,6 +328,7 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
                 onNext={handleStep3Next}
                 onBack={handleStep3Back}
                 isSubmitting={step3Submitting}
+                readOnly={readOnly}
               />
             </div>
           </section>
@@ -332,6 +343,7 @@ export default function SwipeLPv3View({ project }: SwipeLPv3ViewProps) {
             onUpdate={() => router.refresh()}
             onBackToStep3={handleBackToStep3}
             displayStatus={displayStatus}
+            readOnly={readOnly}
           />
         ) : (
           <main className="flex-1 min-h-0 flex flex-col overflow-hidden">

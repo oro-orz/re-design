@@ -16,6 +16,8 @@ interface Step3SupplementProps {
   onBack: () => void;
   /** スライド構成生成中（次へ押下後） */
   isSubmitting?: boolean;
+  /** 他ユーザーによる閲覧時（入力・ボタン無効） */
+  readOnly?: boolean;
 }
 
 const SLIDE_COUNT_OPTIONS: { value: number | null; label: string }[] = [
@@ -36,6 +38,7 @@ export function Step3Supplement({
   onNext,
   onBack,
   isSubmitting = false,
+  readOnly = false,
 }: Step3SupplementProps) {
   const [emphasisPoints, setEmphasisPoints] = useState(initialEmphasisPoints);
   const [slideCount, setSlideCount] = useState<number | null>(initialSlideCount);
@@ -70,7 +73,7 @@ export function Step3Supplement({
               rows={2}
               placeholder="料金の安さ、即日対応、実績の多さ..."
               className={`${inputBase} resize-none`}
-              disabled={isSubmitting}
+              disabled={isSubmitting || readOnly}
             />
           </label>
 
@@ -82,7 +85,7 @@ export function Step3Supplement({
                 setSlideCount(e.target.value === "" ? null : Number(e.target.value))
               }
               className={`${inputBase} bg-white`}
-              disabled={isSubmitting}
+              disabled={isSubmitting || readOnly}
             >
               {SLIDE_COUNT_OPTIONS.map((opt) => (
                 <option key={opt.value ?? "any"} value={opt.value ?? ""}>
@@ -94,31 +97,33 @@ export function Step3Supplement({
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="flex-1 border border-neutral-200 text-neutral-700 py-3 rounded-lg text-sm font-semibold hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          戻る
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="flex-1 bg-neutral-900 text-white py-3 rounded-lg text-sm font-semibold hover:bg-neutral-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              生成中…
-            </>
-          ) : (
-            "次へ：スライドテキストを作成"
-          )}
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            disabled={isSubmitting}
+            className="flex-1 border border-neutral-200 text-neutral-700 py-3 rounded-lg text-sm font-semibold hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            戻る
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="flex-1 bg-neutral-900 text-white py-3 rounded-lg text-sm font-semibold hover:bg-neutral-800 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                生成中…
+              </>
+            ) : (
+              "次へ：スライドテキストを作成"
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

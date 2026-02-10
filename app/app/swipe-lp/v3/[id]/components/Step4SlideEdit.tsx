@@ -35,6 +35,8 @@ interface Step4SlideEditProps {
   onUpdate: () => void;
   onBackToStep3: () => void;
   displayStatus: SwipeLPv3Status;
+  /** 他ユーザーによる閲覧時（編集・保存・戻る非表示） */
+  readOnly?: boolean;
 }
 
 export function Step4SlideEdit({
@@ -43,6 +45,7 @@ export function Step4SlideEdit({
   onUpdate,
   onBackToStep3,
   displayStatus,
+  readOnly = false,
 }: Step4SlideEditProps) {
   const [editingSlides, setEditingSlides] = useState(slides);
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -92,13 +95,15 @@ export function Step4SlideEdit({
       {/* トップバー: パンくず + 保存 + 戻る */}
       <div className="shrink-0 px-6 py-3 flex items-center justify-between border-b border-neutral-200 bg-white">
         <StepProgressBar status={displayStatus} />
-        <button
-          type="button"
-          onClick={handleSaveSlides}
-          className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm font-semibold hover:bg-neutral-800"
-        >
-          スライドを保存
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={handleSaveSlides}
+            className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm font-semibold hover:bg-neutral-800"
+          >
+            スライドを保存
+          </button>
+        )}
       </div>
 
       {/* 2カラム: 左=スライドカード一覧 / 右=詳細 */}
@@ -113,13 +118,15 @@ export function Step4SlideEdit({
                 subtitle="スライドをクリックして詳細を編集"
               />
             </div>
-            <button
-              type="button"
-              onClick={onBackToStep3}
-              className="text-sm text-neutral-600 hover:text-neutral-900 underline mb-4 block"
-            >
-              Step 3 に戻る
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onBackToStep3}
+                className="text-sm text-neutral-600 hover:text-neutral-900 underline mb-4 block"
+              >
+                Step 3 に戻る
+              </button>
+            )}
             {copyToast && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
                 {copyToast}
@@ -180,7 +187,8 @@ export function Step4SlideEdit({
                         updateSlide(selectedSlide.id, { visualHint: e.target.value })
                       }
                       placeholder="例: 青空の下で笑顔の男性。解放感を演出"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                      disabled={readOnly}
                     />
                   </div>
                   <div>
@@ -192,7 +200,8 @@ export function Step4SlideEdit({
                         updateSlide(selectedSlide.id, { storyNote: e.target.value })
                       }
                       placeholder="例: ファーストビュー。理想の姿で引き込み"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                      disabled={readOnly}
                     />
                   </div>
                   <div>
@@ -204,7 +213,8 @@ export function Step4SlideEdit({
                         updateSlide(selectedSlide.id, { keyTakeaway: e.target.value })
                       }
                       placeholder="例: 退職後の穏やかな生活をイメージさせる"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                      disabled={readOnly}
                     />
                   </div>
                   <div>
@@ -226,7 +236,8 @@ export function Step4SlideEdit({
                       }
                       placeholder="1行に1案（最大2案）"
                       rows={2}
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none bg-white"
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                      disabled={readOnly}
                     />
                   </div>
                   {(selectedSlide.purpose?.toLowerCase().includes("cta") ||
@@ -241,7 +252,8 @@ export function Step4SlideEdit({
                             updateSlide(selectedSlide.id, { ctaButtonText: e.target.value })
                           }
                           placeholder="例: LINEで無料相談"
-                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                          disabled={readOnly}
                         />
                       </div>
                       <div>
@@ -253,7 +265,8 @@ export function Step4SlideEdit({
                             updateSlide(selectedSlide.id, { ctaUrgency: e.target.value })
                           }
                           placeholder="例: 24時間受付"
-                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white"
+                          className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-white disabled:opacity-70 disabled:bg-neutral-50"
+                          disabled={readOnly}
                         />
                       </div>
                     </>
@@ -282,23 +295,27 @@ export function Step4SlideEdit({
                     <Copy className="w-3.5 h-3.5" />
                     プロンプト用にコピー
                   </button>
-                  <Link
-                    href="/library/manage"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 rounded-lg text-xs font-medium text-neutral-700 transition-colors"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    プロンプトを生成
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => removeSlide(selectedSlide.id)}
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
-                    aria-label="このスライドを削除"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <Link
+                        href="/library/manage"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 rounded-lg text-xs font-medium text-neutral-700 transition-colors"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        プロンプトを生成
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => removeSlide(selectedSlide.id)}
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg"
+                        aria-label="このスライドを削除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -313,7 +330,8 @@ export function Step4SlideEdit({
                     updateSlide(selectedSlide.id, { emotion: e.target.value })
                   }
                   placeholder="例: 自由・安堵・共感・焦り"
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm disabled:opacity-70 disabled:bg-neutral-50"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -328,7 +346,8 @@ export function Step4SlideEdit({
                     updateSlide(selectedSlide.id, { message: e.target.value })
                   }
                   placeholder="メインメッセージ"
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm disabled:opacity-70 disabled:bg-neutral-50"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -345,7 +364,8 @@ export function Step4SlideEdit({
                   }
                   placeholder="サブメッセージ"
                   rows={2}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none disabled:opacity-70 disabled:bg-neutral-50"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -365,7 +385,8 @@ export function Step4SlideEdit({
                   }
                   placeholder={"例：\n無料マッチ\n結婚前提\n2分で登録"}
                   rows={2}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none disabled:opacity-70 disabled:bg-neutral-50"
+                  disabled={readOnly}
                 />
               </div>
 
@@ -382,7 +403,8 @@ export function Step4SlideEdit({
                   }
                   placeholder="SNSインフルエンサー風に視聴者に語りかける。15-30秒程度（ねえ、みんな、あなた、など）"
                   rows={4}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none disabled:opacity-70 disabled:bg-neutral-50"
+                  disabled={readOnly}
                 />
               </div>
             </div>

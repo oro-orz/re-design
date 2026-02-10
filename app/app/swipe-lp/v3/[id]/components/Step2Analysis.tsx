@@ -8,6 +8,8 @@ interface Step2Props {
   marketingAnalysis: MarketingAnalysis;
   onNext: () => void;
   onImageAnalyzeClick?: () => void;
+  /** 他ユーザーによる閲覧時（編集・次へボタン非表示） */
+  readOnly?: boolean;
 }
 
 interface Step2LeftProps {
@@ -147,6 +149,7 @@ export function Step2AnalysisRight({
   marketingAnalysis,
   onNext,
   onImageAnalyzeClick,
+  readOnly = false,
 }: Step2Props) {
   const unavailable = marketingAnalysis.analysisUnavailable;
   const { framework } = marketingAnalysis;
@@ -208,7 +211,7 @@ export function Step2AnalysisRight({
         </>
       )}
 
-      {!unavailable && (
+      {!unavailable && !readOnly && (
         <button
           type="button"
           onClick={onNext}
