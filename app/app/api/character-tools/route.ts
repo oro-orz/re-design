@@ -221,14 +221,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: image.error }, { status: 400 });
     }
 
-    // マルチポーズ用: 4枚でバラエティが出るよう、枚数ごとに異なる表情・ポーズを指定
+    // マルチポーズ用: 4枚で表情・構図・ポーズがはっきり違うよう指定
     const baseStyle =
       "The same character, manga or cartoon style, consistent character design. Plain white background.";
     const multiPosePrompts = [
-      `${baseStyle} Happy, smiling, cheerful expression. Slight smile, eyes relaxed.`,
-      `${baseStyle} Surprised, shocked expression. Eyes wide open, mouth open in shock.`,
-      `${baseStyle} Angry or frustrated expression. Furrowed brows, shouting or gritting teeth.`,
-      `${baseStyle} Thoughtful or worried expression. Slight frown, looking aside or down, pensive mood.`,
+      `${baseStyle} Front view, face the viewer. Big bright smile, eyes curved with joy, cheerful and energetic. Relaxed shoulders.`,
+      `${baseStyle} Turned slightly to one side, three-quarter angle. Shocked surprise: eyes very wide, mouth open in a gasp, hands or one hand raised near face. Dynamic pose.`,
+      `${baseStyle} Facing forward, aggressive pose. Clearly angry: deep frown, shouting with mouth wide open, furrowed brows, tense expression. Fists clenched or arms in an angry gesture.`,
+      `${baseStyle} Profile or three-quarter view, looking down or to the side. Thoughtful, pensive: hand on chin or touching cheek, slight frown, eyes half-closed or distant. Calm, introspective pose.`,
     ];
 
     const countStr = (formData.get("count") as string) || "4";
