@@ -542,6 +542,22 @@ function CharacterToolsContent() {
                 )}
               </div>
             )}
+
+            {mode === "multi-pose" && (
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={!canRunMultiPose || loading}
+                  className={`w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    canRunMultiPose && !loading
+                      ? "bg-neutral-900 text-white hover:bg-neutral-800"
+                      : "bg-neutral-200 text-neutral-500"
+                  }`}
+                >
+                  {loading ? "生成中…（最大2分かかることがあります）" : "マルチポーズを生成"}
+                </button>
+              </div>
+            )}
           </div>
         </aside>
 
@@ -581,15 +597,6 @@ function CharacterToolsContent() {
                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
               >
                 {loading ? "生成中…（最大2分かかることがあります）" : "別シーンを生成"}
-              </button>
-            )}
-            {mode === "multi-pose" && (
-              <button
-                type="submit"
-                disabled={!canRunMultiPose || loading}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
-              >
-                {loading ? "生成中…（最大2分かかることがあります）" : "4枚のポーズを生成"}
               </button>
             )}
             {error && (
