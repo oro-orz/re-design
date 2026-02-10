@@ -70,9 +70,9 @@ export function Step3Supplement({
             <textarea
               value={emphasisPoints}
               onChange={(e) => setEmphasisPoints(e.target.value)}
-              rows={2}
+              rows={5}
               placeholder="料金の安さ、即日対応、実績の多さ..."
-              className={`${inputBase} resize-none`}
+              className={`${inputBase} min-h-[120px]`}
               disabled={isSubmitting || readOnly}
             />
           </label>

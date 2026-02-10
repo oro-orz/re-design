@@ -278,7 +278,7 @@ export function Step4SlideEdit({
         </aside>
 
         {/* 右: 選択スライドの詳細 */}
-        <section className="overflow-y-auto bg-neutral-50">
+        <section className="overflow-y-auto bg-white">
           <div className="p-6 max-w-2xl">
           {selectedSlide ? (
             <div className="space-y-4">
@@ -384,8 +384,8 @@ export function Step4SlideEdit({
                     })
                   }
                   placeholder={"例：\n無料マッチ\n結婚前提\n2分で登録"}
-                  rows={2}
-                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm resize-none disabled:opacity-70 disabled:bg-neutral-50"
+                  rows={6}
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm min-h-[140px] disabled:opacity-70 disabled:bg-neutral-50"
                   disabled={readOnly}
                 />
               </div>
