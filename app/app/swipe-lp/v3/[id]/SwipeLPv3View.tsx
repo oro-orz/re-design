@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Sparkles, ImagePlus, UsersRound, MessageSquare, ExternalLink, LayoutList } from "lucide-react";
+import { Loader2, Sparkles, ImagePlus, UsersRound, MessageSquare, ExternalLink, LayoutList, ChevronRight } from "lucide-react";
 import { StepProgressBar } from "./components/StepProgressBar";
 import { Step2AnalysisLeft, Step2AnalysisRight, FrameworkCard, AIDMA_SEARCH_URL } from "./components/Step2Analysis";
 import { Step3Supplement } from "./components/Step3Supplement";
@@ -25,6 +25,9 @@ interface SwipeLPv3ViewProps {
   readOnly?: boolean;
 }
 
+/** 閲覧専用時の表示ステップ（2=分析, 3=補足, 4=スライド） */
+type ViewStep = 2 | 3 | 4;
+
 export default function SwipeLPv3View({ project, readOnly = false }: SwipeLPv3ViewProps) {
   const router = useRouter();
   const status = project.status;
@@ -33,6 +36,15 @@ export default function SwipeLPv3View({ project, readOnly = false }: SwipeLPv3Vi
   const [imageAnalyzing, setImageAnalyzing] = useState(false);
   const [imageAnalysisError, setImageAnalysisError] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  const analysis = project.marketing_analysis;
+  const hasSlides = project.slides && project.slides.length > 0;
+  const canViewStep2 = !!analysis;
+  const canViewStep3 = !!analysis;
+  const canViewStep4 = hasSlides;
+
+  const defaultViewStep: ViewStep = canViewStep4 ? 4 : canViewStep3 ? 3 : 2;
+  const [viewStep, setViewStep] = useState<ViewStep>(defaultViewStep);
 
   const handleStep2Next = async () => {
     await updateUserSupplement(project.id, "");
@@ -194,7 +206,148 @@ export default function SwipeLPv3View({ project, readOnly = false }: SwipeLPv3Vi
   const displayStatus: SwipeLPv3Status =
     status === "url_input" ? "analysis_done" : status;
 
-  const analysis = project.marketing_analysis;
+  /** 閲覧専用: ステップ切り替えナビ + 表示ステップに応じたコンテンツ */
+  if (readOnly && (canViewStep2 || canViewStep3 || canViewStep4)) {
+    const steps: { step: ViewStep; label: string; available: boolean }[] = [
+      { step: 2, label: "Step 2 分析結果", available: canViewStep2 },
+      { step: 3, label: "Step 3 補足情報", available: canViewStep3 },
+      { step: 4, label: "Step 4 スライド構成", available: canViewStep4 },
+    ];
+    const showStepNav = steps.filter((s) => s.available).length >= 2;
+
+    return (
+      <div className="min-h-screen bg-neutral-50 flex flex-col">
+        {header}
+
+        {showStepNav && (
+          <nav
+            className="shrink-0 px-4 py-3 bg-white border-b border-neutral-200 flex flex-wrap items-center gap-2"
+            aria-label="表示するステップを選択"
+          >
+            {steps.map(
+              (s) =>
+                s.available && (
+                  <button
+                    key={s.step}
+                    type="button"
+                    onClick={() => setViewStep(s.step)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      viewStep === s.step
+                        ? "bg-neutral-900 text-white"
+                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                    }`}
+                  >
+                    {s.label}
+                    {viewStep === s.step && <ChevronRight className="w-4 h-4 opacity-70" />}
+                  </button>
+                )
+            )}
+          </nav>
+        )}
+
+        {viewStep === 2 && analysis && (
+          <main className="flex-1 grid min-h-0 grid-cols-1 lg:grid-cols-2">
+            <aside className="flex-col min-h-0 border-r border-neutral-200 bg-white overflow-y-auto flex">
+              <div className="shrink-0 px-6 pt-4 pb-2 border-b border-neutral-100">
+                <StepProgressBar status="analysis_done" />
+              </div>
+              <div className="p-6 flex-1">
+                <Step2AnalysisLeft
+                  inputUrl={project.input_url}
+                  marketingAnalysis={analysis}
+                />
+              </div>
+            </aside>
+            <section className="overflow-y-auto bg-neutral-50">
+              <div className="p-6 space-y-4">
+                <Step2AnalysisRight
+                  marketingAnalysis={analysis}
+                  onNext={() => {}}
+                  readOnly
+                />
+              </div>
+            </section>
+          </main>
+        )}
+
+        {viewStep === 3 && analysis && (
+          <main className="flex-1 grid min-h-0 grid-cols-1 lg:grid-cols-2">
+            <aside className="flex-col min-h-0 border-r border-neutral-200 bg-white overflow-y-auto flex">
+              <div className="shrink-0 px-6 pt-4 pb-2 border-b border-neutral-100">
+                <StepProgressBar status="supplement_input" />
+              </div>
+              <div className="p-6 flex-1 space-y-6">
+                {analysis.analysisUnavailable ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-sm font-medium text-amber-900">分析できませんでした</p>
+                    <p className="mt-2 text-sm text-amber-800 whitespace-pre-line">
+                      {analysis.unavailableReason}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <FrameworkCard
+                      title="分析要約"
+                      badge="リサーチ結果"
+                      items={[
+                        { label: "ビジネスタイプ", value: analysis.businessType },
+                        { label: "ターゲット", value: analysis.target },
+                        { label: "感情トリガー", value: analysis.emotionalTrigger },
+                        {
+                          label: "解決すべき痛み",
+                          value: analysis.painPoints.map((p) => `・ ${p}`).join("\n"),
+                        },
+                      ]}
+                    />
+                    <FrameworkCard
+                      title="AIDMA"
+                      badge="認知〜行動の流れ"
+                      items={[
+                        { label: "注目（Attention）", value: analysis.framework.aidma.attention },
+                        { label: "興味（Interest）", value: analysis.framework.aidma.interest },
+                        { label: "欲求（Desire）", value: analysis.framework.aidma.desire },
+                        { label: "記憶（Memory）", value: analysis.framework.aidma.memory },
+                        { label: "行動（Action）", value: analysis.framework.aidma.action },
+                      ]}
+                      headerLink={{ href: AIDMA_SEARCH_URL, label: "AIDMAとは？" }}
+                    />
+                  </>
+                )}
+              </div>
+            </aside>
+            <section className="overflow-y-auto bg-neutral-50">
+              <div className="p-6">
+                <Step3Supplement
+                  initialEmphasisPoints={project.emphasis_points ?? ""}
+                  initialSlideCount={project.slide_count ?? null}
+                  onNext={() => {}}
+                  onBack={() => {}}
+                  readOnly
+                />
+              </div>
+            </section>
+          </main>
+        )}
+
+        {viewStep === 4 && hasSlides && (
+          <Step4SlideEdit
+            projectId={project.id}
+            slides={project.slides}
+            onUpdate={() => {}}
+            onBackToStep3={() => {}}
+            displayStatus={displayStatus}
+            readOnly
+          />
+        )}
+
+        {readOnly && !canViewStep2 && !canViewStep3 && !canViewStep4 && (
+          <main className="flex-1 flex items-center justify-center p-6">
+            <p className="text-neutral-500 text-sm">まだ表示できるステップがありません。しばらくしてから再読み込みしてください。</p>
+          </main>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">

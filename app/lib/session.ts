@@ -7,10 +7,11 @@ const MAX_AGE_SEC = 24 * 60 * 60; // 24h
 
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error("SESSION_SECRET must be set and at least 32 characters");
+  if (secret && secret.length >= 32) return secret;
+  if (process.env.NODE_ENV === "development") {
+    return "re-design-dev-session-secret-min-32-chars";
   }
-  return secret;
+  throw new Error("SESSION_SECRET must be set and at least 32 characters");
 }
 
 function base64UrlEncode(buf: Buffer): string {

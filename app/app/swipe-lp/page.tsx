@@ -35,7 +35,7 @@ export default function SwipeLPNewPage() {
       return;
     }
 
-    router.push(`/swipe-lp/${project.id}`);
+    router.push(`/swipe-lp/${project.short_id ?? project.id}`);
   };
 
   return (

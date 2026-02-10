@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUserFromSession } from "@/lib/session";
 import { runSlideCopyEnricher } from "@/lib/swipe-lp/gaudi/copy/slide-copy-enricher";
@@ -9,8 +10,26 @@ import {
 } from "@/lib/swipe-lp/gaudi/slides/structure-generator";
 import type { SwipeLPv3Project, SwipeLPv3Slide } from "@/types/swipe-lp-v3";
 
+const SHORT_ID_LENGTH = 8;
+const SHORT_ID_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function generateShortId(): string {
+  const bytes = crypto.randomBytes(SHORT_ID_LENGTH);
+  let result = "";
+  for (let i = 0; i < SHORT_ID_LENGTH; i++) {
+    result += SHORT_ID_ALPHABET[bytes[i]! % SHORT_ID_ALPHABET.length];
+  }
+  return result;
+}
+
+/** URLの id パラメータが UUID 形式かどうか */
+function isUuid(id: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+}
+
 /**
  * v3プロジェクト作成 + URL分析開始
+ * 新規プロジェクトには short_id を付与し、共有URLを短くする
  */
 export async function createV3Project(
   url: string
@@ -22,12 +41,14 @@ export async function createV3Project(
   const trimmed = url.trim();
   if (!trimmed) return { error: "URLを入力してください" };
 
+  const short_id = generateShortId();
   const { data: project, error } = await supabase
     .from("swipe_lp_v3_projects")
     .insert({
       user_id: user.id,
       input_url: trimmed,
       status: "analyzing",
+      short_id,
     })
     .select()
     .single();
@@ -128,6 +149,7 @@ export async function analyzeImageForV3(
 
 /**
  * v3プロジェクト取得（認証済みのRe:Designユーザーなら誰でも閲覧可能）
+ * id には UUID または short_id のどちらでも指定可能（既存リンクは UUID のまま有効）
  * @returns isOwner: 閲覧者がプロジェクトの作成者かどうか（編集可否の判定に使用）
  */
 export async function getV3Project(
@@ -137,10 +159,11 @@ export async function getV3Project(
   if (!user) return { error: "認証が必要です" };
   const supabase = createAdminClient();
 
+  const column = isUuid(projectId) ? "id" : "short_id";
   const { data, error } = await supabase
     .from("swipe_lp_v3_projects")
     .select("*")
-    .eq("id", projectId)
+    .eq(column, projectId)
     .single();
 
   if (error || !data) return { error: "プロジェクトが見つかりません" };

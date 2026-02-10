@@ -43,6 +43,8 @@ export interface SlideReadyCopy {
 
 export interface SwipeLPv3Project {
   id: string;
+  /** 短い共有用ID（URLを /swipe-lp/{short_id} にできる）。既存プロジェクトは null のこともある */
+  short_id?: string | null;
   user_id: string;
   created_at: string;
   updated_at: string;
