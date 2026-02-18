@@ -78,6 +78,8 @@ function extractUrl(v: unknown): string | null {
 /**
  * 画像を file または imageUrl から解決し、公開URLを返す。
  * ファイルの場合は Storage にアップロードする。
+ * アップロード制限: オブジェクトキーは英数字・ハイフン・アンダースコアのみ有効なため、
+ * ファイル名は使わず timestamp.拡張子 のみ使用。容量は Vercel のリクエストボディ制限（4.5MB）に注意。
  */
 async function resolveImageToPublicUrl(
   supabase: ReturnType<typeof createAdminClient>,
@@ -94,8 +96,8 @@ async function resolveImageToPublicUrl(
   }
   if (imageFile && imageFile.size > 0) {
     const timestamp = Date.now();
-    const filename = `${userId}/${timestamp}-${imageFile.name || "image"}`;
-    const path = `character-tools/${filename}`;
+    const ext = (imageFile.name && /\.([a-z0-9]+)$/i.exec(imageFile.name)?.[1]) || "png";
+    const path = `character-tools/${userId}/${timestamp}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
       .upload(path, imageFile, {

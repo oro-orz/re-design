@@ -392,6 +392,9 @@ function CharacterToolsContent() {
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-6">
+            <p className="text-xs text-neutral-500">
+              画像アップロード: 4MB以下推奨。ファイル名は英数字にすると確実です。
+            </p>
             {mode === "face-swap" && (
               <>
                 <div className="space-y-3">
